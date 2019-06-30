@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.2"
+__version__ = "0.2.1"
 __status__ = "Production"
 
 import os,re,requests,configparser
@@ -121,7 +121,6 @@ if CONFIG['PlayList']['genListForFolder']:
                         playlist_file.writelines('\n{}/{}'.format(dir_name,track))
             playlist_file.close()
 
-del files,dir_name,folder,playlist_file
 print("")
 
 playlist = requests.get(SERVER + "user/playlist?uid=" + CONFIG['General']['UID']).json()
