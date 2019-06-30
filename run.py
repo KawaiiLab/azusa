@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = "XiaoLin"
+__email__ = "lolilin@outlook.com"
+__license__ = "MIT"
+__version__ = "0.2"
+__status__ = "Production"
+
 import os,re,requests,configparser
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
@@ -7,7 +16,6 @@ from PIL import Image
 CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
-UID = CONFIG['General']['UID']
 
 def format_string(string):
     """
@@ -85,6 +93,8 @@ def download_file(file_url, file_name, folder):
                 progress.refresh(len(buffer))
     return False
 
+print("CloudMan Version {}".format(__version__) + "\n")
+
 # Create target Directory if don't exist
 dirName = './../MUSIC/CloudMan'
 if not os.path.exists(dirName):
@@ -94,7 +104,49 @@ dirName = './../MUSIC/CloudMan/MUSIC'
 if not os.path.exists(dirName):
     os.mkdir(dirName)
 
-playlist = requests.get(SERVER + "user/playlist?uid=" + UID).json()
+if CONFIG['PlayList']['genListForFolder']:
+
+    files = os.listdir("./../MUSIC")
+    for dir_name in files:
+        if os.path.isdir(os.path.join("./../MUSIC", dir_name)):
+            if dir_name == "CloudMan":
+                continue
+            print("Generating playlist for folder: {}".format(dir_name))
+            playlist_file = open("./../MUSIC/{}.m3u".format(dir_name), 'w', encoding='utf8')
+            playlist_file.writelines("#EXTM3U\n")
+            folder = os.listdir(os.path.join("./../MUSIC", dir_name))
+            for track in folder:
+                if not os.path.isdir(os.path.join("./../MUSIC", dir_name,track)):
+                    if track.endswith('flac') or track.endswith('mp3'):
+                        playlist_file.writelines('\n{}/{}'.format(dir_name,track))
+            playlist_file.close()
+
+del files,dir_name,folder,playlist_file
+print("")
+
+playlist = requests.get(SERVER + "user/playlist?uid=" + CONFIG['General']['UID']).json()
+
+for extraList in CONFIG['PlayList']['extraList'].split(','):
+    tmp = requests.get(SERVER + "playlist/detail?id=" + extraList.replace(" ", "")).json()
+    if tmp['code'] == 200:
+        playlist['playlist'].append({
+            'name': tmp['playlist']['name'],
+            'id': tmp['playlist']['id']
+        })
+del tmp, extraList
+
+excludeList = []
+for tmp in CONFIG['PlayList']['excludeList'].split(','):
+    if not re.search(r"\w+",tmp) is None:
+        excludeList.append(int(tmp.replace(" ", "")))
+
+playlist['playlist'] = [x for x in playlist['playlist'] if x['id'] not in excludeList]
+
+print("The list of playlists we're going to download:")
+for list in playlist['playlist']:
+    print("{} ({})".format(list['name'],list['id']))
+del list, excludeList
+print("")
 
 for list in playlist['playlist']:
     playlist_name = list['name']

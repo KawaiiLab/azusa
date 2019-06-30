@@ -1,8 +1,9 @@
-# CloudMan
-用来为 Sony WalkMan 播放器生成处理好的播放列表的小程序
+<h1 align="center">CloudMan</h1>
+用来为 Sony WalkMan 播放器生成播放列表的小程序
 
 🎆for and by Music Lovers
 
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.02-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
 
 ## 简介
 
@@ -16,7 +17,8 @@
 - [x] 下载用户歌单
 - [x] 填充音乐元数据
 - [x] 下载并格式化歌词及翻译
-- [ ] 允许排除 / 附加歌单
+- [x] 允许排除 / 附加歌单
+- [x] 为本地文件夹生成列表
 - [ ] 自定义下载质量 (默认最高)
 - [ ] 处理云端歌单变动
 - [ ] 处理播放器端列表变动
@@ -37,16 +39,25 @@
 3. 将 `config.example.ini` 重命名为 `config.ini` 并修改其中的网易云 `UID` 及 API 服务器地址
 4. 输入 `python3 run.py` 即可
 
+## 睾级功能 (误
+
+1. 在 `config.ini` 中填写 `extraList` 或 `excludeList` 即可做到附加其他的作用
+2. 在 `config.ini` 中填写 `genListForFolder` 即可为目录 `/MUSIC` 下的文件夹生成列表文件
+
+(一点都不高级好吧
+
 ## 运行方式
 
-程序运行时自动在根目录的 `MUSIC` 子目录中生成 `CloudMan` 文件夹, 其中 `MUSIC` 文件夹用于存放歌曲文件及歌词文件, 父目录用于存放播放列表文件
+程序运行时自动在根目录的 `/MUSIC` 中生成 `CloudMan` 文件夹, 该文件夹中 `MUSIC` 文件夹用于存放歌曲文件及歌词文件, 父目录用于存放播放列表文件
 
-为了方便区分, 所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
+所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
+
+## 更新日志
+
+见 [CHANGELOG.md](https://github.com/LoliLin/CloudMan/blob/master/CHANGELOG.md)
 
 ## 鸣谢
 
-[codezjx/netease-cloud-music-dl](https://github.com/codezjx/netease-cloud-music-dl): 如果没有遇到这个项目可能到现在我还不知道 Py 有一个全功能的音乐元数据修改包 (x
-
-(本项目的下载部分代码部分参考该项目
+[codezjx/netease-cloud-music-dl](https://github.com/codezjx/netease-cloud-music-dl): 如果没有遇到这个项目可能到现在我还不知道 Py 有一个全功能的音乐元数据修改包 (本项目的下载部分代码部分参考该项目
 
 [quodlibet/mutagen](https://github.com/quodlibet/mutagen): 全功能音乐元数据编辑库
