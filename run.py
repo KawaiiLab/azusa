@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.2.1"
+__version__ = "0.2.3"
 __status__ = "Production"
 
 import os,re,requests,configparser
@@ -12,6 +12,7 @@ from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
 from mutagen.flac import Picture, FLAC
 from datetime import datetime
+from operator import itemgetter
 from PIL import Image
 CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
@@ -24,30 +25,28 @@ def format_string(string):
     return re.sub(r'[\\/:*?"<>|\t]', ' ', string)
 
 def get_lyric_time(line):
-    if (re.search(r"\]+",line) is None) or (len(line.split(']')) < 2) or (len(line.split(']')[0].split(':')) < 2):
+    result = re.match(r"\[(?P<minute>\w+):(?P<second>\w+)\.(?P<millisecond>\w+)\]", line)
+    if result is None:
         return False
-    minute = line.split(']')[0].split(':')[0][1:]
-    second = line.split(']')[0].split(':')[1]
-    if (not (minute is None and second is None)) and not (re.search(r"^\w+$",minute) is None or re.search(r"^\w+\.\w+$",second) is None):
-        return int(minute), float(second)
-    return False
+    result = result.groupdict()
+    return float(result['minute']) * 60 + float(result['second'] + '.' + result['millisecond'])
 
-def gen_lyric_time(minute,second):
+def gen_lyric_time(time):
+    minute = int(time / 60)
+    second = time % 60
     minute = str(minute)
+    second = str(second)
+
+    se, ms, ms = second.partition('.')
+    ms = (ms + "0" * 2)[:2]
+    second = ".".join([se, ms])
+
     if len(minute) == 1:
         minute = '0' + minute
-    if second < 0:
-        second = str(0.0)
-    else:
-        second = str(second)
     if len(second.split('.')[0]) == 1:
         second = '0' + second
-    if len(second.split('.')[1]) == 1:
-        second = second + '0'
-    else:
-        second = second.split('.')[0] + '.' + second.split('.')[1][0:2]
     
-    return "[{}:{}]".format(minute, second)
+    return "[{}:{}]".format(minute,second)
 
 def download_file(file_url, file_name, folder):
     class ProgressBar(object):
@@ -219,38 +218,17 @@ for list in playlist['playlist']:
                 if id3.getall('APIC'):
                     id3.delall('APIC')
                 # add album cover
-                id3.add(
-                    APIC(
-                        encoding=0,         # 3 is for UTF8, but here we use 0 (LATIN1) for 163, orz~~~
-                        mime='image/jpeg',  # image/jpeg or image/png
-                        type=3,             # 3 is for the cover(front) image
-                        data=open(cover_file_path, 'rb').read()
-                    )
-                )
+                id3.add(APIC(encoding=0,mime='image/jpeg',type=3,data=open(cover_file_path, 'rb').read()))
 
                 artists = []
                 for artist in track['ar']:
                     artists.append(artist['name'])
                 # add artist name
-                id3.add(
-                    TPE1(
-                        text=artists
-                    )
-                )
+                id3.add(TPE1(text=artists))
                 # add song name
-                id3.add(
-                    TIT2(
-                        encoding=3,
-                        text=track['name']
-                    )
-                )
+                id3.add(TIT2(encoding=3,text=track['name']))
                 # add album name
-                id3.add(
-                    TALB(
-                        encoding=3,
-                        text=track['al']['name']
-                    )
-                )
+                id3.add(TALB(encoding=3,text=track['al']['name']))
                 id3.save(v2_version=3)
             except HeaderNotFoundError:
                 print('Can\'t sync to MPEG frame, not an validate MP3 file!')
@@ -294,44 +272,55 @@ for list in playlist['playlist']:
 
         if ('lrc' in track_lyric_raw) and not(track_lyric_raw['lrc']['lyric'] is None):
             track_lyric_file = open(os.path.join(dirName, str(track['id']) + '.lrc'), 'w', encoding='utf8')
-
             if ('tlyric' in track_lyric_raw) and (track_lyric_raw['tlyric']['version'] != 0) and not(track_lyric_raw['tlyric']['lyric'] is None):
                 track_lyric = track_lyric_raw['lrc']['lyric'].split('\n')
                 track_lyric_trans = track_lyric_raw['tlyric']['lyric'].split('\n')
+                lyric = []
 
-                track_lyric_trans_offset = 0
-                for key, value in enumerate(track_lyric):
-                    if len(track_lyric_trans) == track_lyric_trans_offset:
-                        track_lyric_trans_offset = -1
+                for a in track_lyric:
+                    time = get_lyric_time(a)
+                    if not time:
                         continue
 
-                    if get_lyric_time(value) == False or get_lyric_time(track_lyric_trans[track_lyric_trans_offset]) == False:
-                        track_lyric_trans_offset += 1
+                    data = {
+                        'time': time,
+                        'type': 0,
+                        'content': re.sub(r"^\[\w+\:\w+\.\w+\]","",a)
+                    }
+                    lyric.append(data)
+
+                for a in track_lyric_trans:
+                    time = get_lyric_time(a)
+                    if not time:
                         continue
 
-                    ori_min, ori_sec = get_lyric_time(value)
+                    data = {
+                        'time': time,
+                        'type': 1,
+                        'content': re.sub(r"^\[\w+\:\w+\.\w+\]","",a)
+                    }
+                    lyric.append(data)
 
-                    track_lyric_file.writelines(gen_lyric_time(ori_min,ori_sec) + re.sub(r"^\[\w+\:\w+\.\w+\]","",value) + "\n")
-                    if track_lyric_trans_offset == -1:
+                lyric = sorted(lyric,key = itemgetter('time', 'type'))
+                for key, value in enumerate(lyric):
+                    if (value['type'] == 0) or (key == 0) or (key == len(lyric) - 1):
+                        continue
+                    if (lyric[key - 1]['type'] == 1):
+                        continue
+                    if not (lyric[key - 1]['time'] == value['time']):
                         continue
 
-                    trans_min, trans_sec = get_lyric_time(track_lyric_trans[track_lyric_trans_offset])
+                    lyric[key]['time'] = lyric[key + 1]['time']
 
-                    if key < len(track_lyric) and get_lyric_time(track_lyric[key + 1]) != False:
-                        next_min, next_sec = get_lyric_time(track_lyric[key + 1])
-                    else:
-                        next_min, next_sec = get_lyric_time(value)
-                        next_min += 10
-                        track_lyric_trans_offset = -1
-
-                    if (trans_min*60 + trans_sec > ori_min*60 + ori_sec) and (trans_min*60 + trans_sec < next_min*60 + next_sec):
-                        track_lyric_file.writelines(gen_lyric_time(trans_min,trans_sec) + re.sub(r"^\[\w+\:\w+\.\w+\]","",track_lyric_trans[track_lyric_trans_offset]) + "\n")
-                        track_lyric_trans_offset += 1
-                    elif trans_min*60 + trans_sec == ori_min*60 + ori_sec:
-                        track_lyric_file.writelines(gen_lyric_time(next_min,next_sec-0.02) + re.sub(r"^\[\w+\:\w+\.\w+\]","",track_lyric_trans[track_lyric_trans_offset]) + "\n")
-                        track_lyric_trans_offset += 1
+                for a in lyric:
+                    track_lyric_file.writelines("{}{}\n".format(gen_lyric_time(a['time']),a['content']))
             else:
-                track_lyric_file.write(track_lyric_raw['lrc']['lyric'])
+                track_lyric = track_lyric_raw['lrc']['lyric'].split('\n')
+                for a in track_lyric:
+                    time = get_lyric_time(a)
+                    if not time:
+                        continue
+                    track_lyric_file.writelines(gen_lyric_time(time) + re.sub(r"^\[\w+\:\w+\.\w+\]","",a) + "\n")
             track_lyric_file.close()
     playlist_file.close()
     

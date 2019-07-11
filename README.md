@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.2.2-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.2.3-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
 
 ## 简介
 
@@ -16,7 +16,7 @@
 ## Features / TODOs
 - [x] 下载用户歌单
 - [x] 填充音乐元数据
-- [x] 下载并格式化歌词及翻译 (待优化)
+- [x] 下载并格式化歌词及翻译
 - [x] 允许排除 / 附加歌单
 - [x] 为本地文件夹生成列表
 - [ ] 自定义下载质量 (默认最高)
