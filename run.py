@@ -17,6 +17,7 @@ from PIL import Image
 CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
+requests = requests.Session()
 
 def format_string(string):
     """
@@ -104,13 +105,11 @@ if not os.path.exists(dirName):
     os.mkdir(dirName)
 
 if CONFIG['PlayList']['genListForFolder']:
-
     files = os.listdir("./../MUSIC")
     for dir_name in files:
         if os.path.isdir(os.path.join("./../MUSIC", dir_name)):
             if dir_name == "CloudMan":
                 continue
-            print("Generating playlist for folder: {}".format(dir_name))
             playlist_file = open("./../MUSIC/{}.m3u".format(dir_name), 'w', encoding='utf8')
             playlist_file.writelines("#EXTM3U\n")
             folder = os.listdir(os.path.join("./../MUSIC", dir_name))
@@ -119,10 +118,20 @@ if CONFIG['PlayList']['genListForFolder']:
                     if track.endswith('flac') or track.endswith('mp3'):
                         playlist_file.writelines('\n{}/{}'.format(dir_name,track))
             playlist_file.close()
+            print("Successfully generated playlist for folder: {}".format(dir_name))
+    print("")
 
-print("")
+if CONFIG['General']['enableLogin']:
+    login = requests.get(SERVER + "login/cellphone?phone={}&password={}".format(CONFIG['General']['cellphone'],CONFIG['General']['password'])).json()
+    if not login['code'] == 200:
+        print("Login failed: " + login['msg'])
+        exit()
+    UID = login['profile']['userId']
+    print("Login success")
+else:
+    UID = CONFIG['General']['UID']
 
-playlist = requests.get(SERVER + "user/playlist?uid=" + CONFIG['General']['UID']).json()
+playlist = requests.get(SERVER + "user/playlist?uid=" + str(UID)).json()
 
 for extraList in CONFIG['PlayList']['extraList'].split(','):
     tmp = requests.get(SERVER + "playlist/detail?id=" + extraList.replace(" ", "")).json()
@@ -131,7 +140,9 @@ for extraList in CONFIG['PlayList']['extraList'].split(','):
             'name': tmp['playlist']['name'],
             'id': tmp['playlist']['id']
         })
+        print("Successfully get all tracks from playlist {}".format(tmp['playlist']['name']))
 del tmp, extraList
+print("")
 
 excludeList = []
 for tmp in CONFIG['PlayList']['excludeList'].split(','):
@@ -165,7 +176,7 @@ for list in playlist['playlist']:
         track_name = format_string(track['name'])
 
         # download song
-        track_url = requests.get(SERVER + 'song/url?br=9990000&id=' + str(track['id'])).json()['data'][0]['url']
+        track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()['data'][0]['url']
         if track_url is None:
             print('Song <<{}>> is not available due to copyright issue!'.format(track_name))
             continue
