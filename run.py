@@ -210,7 +210,7 @@ for list in playlist['playlist']:
     log.debug(json.dumps(playlist_tracks))
 
     log.info('Downloading playlist: ' + playlist_name)
-    playlist_file = dirName + '/../' + format_string(playlist_name) + '.m3u'
+    playlist_file = playlist_file_path = dirName + '/../' + format_string(playlist_name) + '.m3u'
     if os.path.exists(playlist_file):
         os.remove(playlist_file)
 
@@ -225,6 +225,11 @@ for list in playlist['playlist']:
 
         if is_downloaded(track['id']):
             log.info('Music file already download')
+            if os.path.isfile(os.path.join(dirName,str(track['id']) + '.mp3')):
+                playlist_file.writelines("\n" + 'MUSIC/' + str(track['id']) + '.mp3')
+            else:
+                playlist_file.writelines("\n" + 'MUSIC/' + str(track['id']) + '.flac')
+            playlist_file.flush()
             continue
 
         # download song
@@ -392,5 +397,6 @@ for list in playlist['playlist']:
             track_lyric_file.close()
 
         downloaded_music(track['id'])
+    playlist_file.writelines("\n")
     playlist_file.close()
-    
+    os.chmod(playlist_file_path,0o777)
