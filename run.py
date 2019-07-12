@@ -4,13 +4,13 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
-from mutagen.flac import Picture, FLAC
+from mutagen.flac import Picture, FLAC, FLACNoHeaderError
 from datetime import datetime
 from operator import itemgetter
 from PIL import Image
@@ -311,7 +311,7 @@ for list in playlist['playlist']:
                 audio.clear_pictures()
                 audio.add_picture(image)
                 audio.save()
-            except HeaderNotFoundError:
+            except FLACNoHeaderError:
                 print('Can\'t sync to MPEG frame, not an validate FLAC file!')
                 continue
 
