@@ -3,15 +3,13 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.4.2-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.4.3-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
 
 ## 简介
 
 本来是只想写一个下载网易云歌单并自动添加元数据 (曲名、专辑名、封面图等) 的小程序的, 歌词由某位 dalao 写的 `ZonyLrcToolsX` 来处理, 但是发现这个程序的逻辑有点小问题 (大概也不算小, 翻译基本上没对上过原文, 除了少数几首开头没有作词作曲信息的曲子), 导致翻译与原文对不上, 于是就顺带把歌词处理也给加上了
 
 之前没用过 Python, 使用 Py 是为了使用 `mutagen` 库, 代码不精还请多多指教
-
-若有网易云会员推荐登录, 登录后可下载那些标了版权问题的歌曲和无损歌曲, 若没有会员的话可以选择不登录, 只填写 `UID` (开启登录后无需填写 `UID` 字段)
 
 如果代码有 BUG 或者有可以改进的地方欢迎提 IS 或 PR 嗷 (小声
 
@@ -42,6 +40,10 @@
 2. 进入 `CloudMan` 目录, 输入 `pip3 install -r requirements.txt`
 3. 将 `config.example.ini` 重命名为 `config.ini` 并修改其中的网易云 `UID` 及 API 服务器地址
 4. 输入 `python3 run.py` 即可
+
+若有网易云会员推荐登录, 登录后可下载那些标了版权问题的歌曲和无损歌曲, 若没有会员的话可以选择不登录, 只填写 `UID` (开启登录后无需填写 `UID` 字段)
+
+下载线程数建议设置为 4 及 4 以下, 若超过 4 疑似会被强制断开
 
 ## 睾级功能 (误
 

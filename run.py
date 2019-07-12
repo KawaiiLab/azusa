@@ -4,10 +4,10 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 __status__ = "Production"
 
-import os, re, requests, configparser, json, signal
+import os, re, requests, configparser, json, signal, logging as log, coloredlogs
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
 from mutagen.flac import Picture, FLAC, FLACNoHeaderError
@@ -19,6 +19,7 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
 requests = requests.Session()
+coloredlogs.install(level='INFO')
 
 def format_string(string):
     """
@@ -115,17 +116,17 @@ def download_file(file_url, file_name, folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
     file_path = os.path.join(folder, file_name)
-    print("Start downloading file {}".format(os.path.basename(file_name)))
+    log.info("Start downloading file {}".format(os.path.basename(file_name)))
     Downloader(file_url,CONFIG['General']['threadNum'],file_path).run()
-    print("File {} downloaded".format(os.path.basename(file_name)))
-
+    log.info("File {} downloaded".format(os.path.basename(file_name)))
 
 def quit(signum, frame):
+    log.critical("Ctrl-C detected")
     exit()
 signal.signal(signal.SIGINT, quit)
 signal.signal(signal.SIGTERM, quit)
 
-print("CloudMan Version {}".format(__version__) + "\n")
+log.info("CloudMan Version {}".format(__version__))
 
 # Create target directories if don't exist
 dirName = './Data'
@@ -154,29 +155,31 @@ if CONFIG['PlayList']['genListForFolder']:
                     if track.endswith('flac') or track.endswith('mp3'):
                         playlist_file.writelines('\n{}/{}'.format(dir_name,track))
             playlist_file.close()
-            print("Successfully generated playlist for folder: {}".format(dir_name))
-    print("")
+            log.info("Successfully generated playlist for folder: {}".format(dir_name))
 
 if CONFIG['General']['enableLogin']:
     login = requests.get(SERVER + "login/cellphone?phone={}&password={}".format(CONFIG['General']['cellphone'],CONFIG['General']['password'])).json()
+    log.debug(json.dumps(login))
     if not login['code'] == 200:
-        print("Login failed: " + login['msg'])
+        log.error("Login failed: " + login['msg'])
         exit()
     UID = login['profile']['userId']
-    print("Login success\n")
+    log.info("Login success")
 else:
     UID = CONFIG['General']['UID']
 
 playlist = requests.get(SERVER + "user/playlist?uid=" + str(UID)).json()
+log.debug(json.dumps(playlist))
 
 for extraList in CONFIG['PlayList']['extraList'].split(','):
     tmp = requests.get(SERVER + "playlist/detail?id=" + extraList.replace(" ", "")).json()
+    log.debug(json.dumps(tmp))
     if tmp['code'] == 200:
         playlist['playlist'].append({
             'name': tmp['playlist']['name'],
             'id': tmp['playlist']['id']
         })
-        print("Successfully get all tracks from playlist {}".format(tmp['playlist']['name']))
+        log.info("Successfully get all tracks from playlist {}".format(tmp['playlist']['name']))
 del tmp, extraList
 
 excludeList = []
@@ -186,16 +189,17 @@ for tmp in CONFIG['PlayList']['excludeList'].split(','):
 
 playlist['playlist'] = [x for x in playlist['playlist'] if x['id'] not in excludeList]
 
-print("The list of playlists we're going to download:")
+log.info("The list of playlists we're going to download:")
 for list in playlist['playlist']:
-    print("{} ({})".format(list['name'],list['id']))
+    log.info("{} ({})".format(list['name'],list['id']))
 del list, excludeList
 
 for list in playlist['playlist']:
     playlist_name = list['name']
     playlist_tracks = requests.get(SERVER + "playlist/detail?id=" + str(list['id'])).json()['playlist']['tracks']
+    log.debug(json.dumps(playlist_tracks))
 
-    print('\nDownloading playlist: ' + playlist_name)
+    log.info('Downloading playlist: ' + playlist_name)
     playlist_file = dirName + '/../' + format_string(playlist_name) + '.m3u'
     if os.path.exists(playlist_file):
         os.remove(playlist_file)
@@ -205,20 +209,21 @@ for list in playlist['playlist']:
     i = 0
     for track in playlist_tracks:
         i += 1
-        print('{}: {}'.format(i, track['name']))
+        log.info('{}: {}'.format(i, track['name']))
 
         track_name = format_string(track['name'])
 
         if is_downloaded(track['id']):
-            print('Music file already download')
+            log.info('Music file already download')
             continue
 
         # download song
         track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()
+        log.debug(json.dumps(track))
         if (not track_url is None) and 'data' in track_url:
             track_url = track_url['data'][0]['url']
         if track_url is None or not validate_url(track_url):
-            print('Song <<{}>> is not available due to copyright issue!'.format(track_name))
+            log.warning('Song <<{}>> is not available due to copyright issue!'.format(track_name))
             continue
         
         track_file_name = '{}.{}'.format(str(track['id']),os.path.splitext(track_url)[-1][1:])
@@ -243,7 +248,7 @@ for list in playlist['playlist']:
                 img = img.convert('RGB')
             img.save(cover_file_path, quality=90)
         except IOError:
-            print('Can\'t open image:', cover_file_path)
+            log.warning('Can\'t open image:' + cover_file_path)
 
         # add metadata for song
         if os.path.splitext(track_url)[-1][1:] != 'flac':
@@ -251,12 +256,12 @@ for list in playlist['playlist']:
             try:
                 audio = MP3(track_file_path, ID3=ID3)
                 if audio.tags is None:
-                    print('No tags, trying to add one!')
+                    log.warning('No tags, trying to add one!')
                     try:
                         audio.add_tags()
                         audio.save()
                     except error as e:
-                        print('Error occur when add tags:', str(e))
+                        log.error('Error occur when add tags:' + str(e))
                 
                 # Modify ID3 tags
                 id3 = ID3(track_file_path)
@@ -279,18 +284,18 @@ for list in playlist['playlist']:
                 id3.add(TALB(encoding=3,text=track['al']['name']))
                 id3.save(v2_version=3)
             except HeaderNotFoundError:
-                print('Can\'t sync to MPEG frame, not an validate MP3 file!')
+                log.error('Can\'t sync to MPEG frame, not an validate MP3 file!')
                 continue
         else:
             try:
                 audio = FLAC(track_file_path)
                 if audio.tags is None:
-                    print('No tags, trying to add one!')
+                    log.warning('No tags, trying to add one!')
                     try:
                         audio.add_tags()
                         audio.save()
                     except error as e:
-                        print('Error occur when add tags:', str(e))
+                        log.error('Error occur when add tags:' + str(e))
 
                 audio['title'] = track['name']
                 artists = []
@@ -312,13 +317,14 @@ for list in playlist['playlist']:
                 audio.add_picture(image)
                 audio.save()
             except FLACNoHeaderError:
-                print('Can\'t sync to MPEG frame, not an validate FLAC file!')
+                log.error('Can\'t sync to MPEG frame, not an validate FLAC file!')
                 continue
 
         # delete cover file
         os.remove(cover_file_path)
 
         track_lyric_raw = requests.get(SERVER + 'lyric?id=' + str(track['id'])).json()
+        log.debug(json.dumps(track_lyric_raw))
 
         if ('lrc' in track_lyric_raw) and not(track_lyric_raw['lrc']['lyric'] is None):
             track_lyric_file = open(os.path.join(dirName, str(track['id']) + '.lrc'), 'w', encoding='utf8')
