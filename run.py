@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.4"
+__version__ = "0.4.1"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal
@@ -214,7 +214,9 @@ for list in playlist['playlist']:
             continue
 
         # download song
-        track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()['data'][0]['url']
+        track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()
+        if (not track_url is None) and 'data' in track_url:
+            track_url = track_url['data'][0]['url']
         if track_url is None or not validate_url(track_url):
             print('Song <<{}>> is not available due to copyright issue!'.format(track_name))
             continue
