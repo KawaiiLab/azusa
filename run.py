@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal, logging as log, coloredlogs
@@ -19,7 +19,7 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
 requests = requests.Session()
-coloredlogs.install(level='INFO')
+coloredlogs.install(level=CONFIG['General']['logLevel'])
 
 def format_string(string):
     """
@@ -84,8 +84,6 @@ def download_file(file_url, file_name, folder):
             self.url = url
             self.num = int(num)
             self.name = name
-            r = requests.head(self.url)
-            self.size = int(r.headers['Content-Length']) 
 
         def down(self, start, end):
 
@@ -97,6 +95,18 @@ def download_file(file_url, file_name, folder):
                 f.write(r.content)
 
         def run(self):
+            r = requests.head(self.url)
+            if not 'Content-Length' in r.headers:
+                log.warning('Get file length failed, use single thread to download')
+                response = requests.get(self.url, stream=True)
+
+                with open(self.name, 'wb') as file:
+                    for buffer in response.iter_content(chunk_size=1024):
+                        if buffer:
+                            file.write(buffer)
+                return None
+
+            self.size = int(r.headers['Content-Length'])
             f = open(self.name, "wb")
             f.truncate(self.size)
             f.close()
