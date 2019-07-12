@@ -4,16 +4,17 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.2.3"
+__version__ = "0.4"
 __status__ = "Production"
 
-import os,re,requests,configparser
+import os, re, requests, configparser, json, signal
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
 from mutagen.flac import Picture, FLAC
 from datetime import datetime
 from operator import itemgetter
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor, wait
 CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
@@ -49,53 +50,88 @@ def gen_lyric_time(time):
     
     return "[{}:{}]".format(minute,second)
 
+def downloaded_music(id):
+    if os.path.isfile('./Data/downloaded.json'):
+        data = json.loads(open('./Data/downloaded.json','r').read())
+    else:
+        data = []
+    data.append(id)
+    data = open('./Data/downloaded.json','w').write(json.dumps(data))
+    
+    return True
+
+def is_downloaded(id):
+    if os.path.isfile('./Data/downloaded.json'):
+        data = json.loads(open('./Data/downloaded.json','r').read())
+        if id in data:
+            return True
+    return False
+
+def validate_url(url):
+    regex = re.compile(
+        r'^(?:http|ftp)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        r'localhost|' #localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?' # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return re.match(regex, url) is not None
+
 def download_file(file_url, file_name, folder):
-    class ProgressBar(object):
-        def __init__(self, file_name, total):
-            super().__init__()
-            self.file_name = file_name
-            self.count = 0
-            self.prev_count = 0
-            self.total = total
-            self.end_str = '\r'
+    class Downloader(): 
+        def __init__(self, url, num, name):
+            self.url = url
+            self.num = int(num)
+            self.name = name
+            r = requests.head(self.url)
+            self.size = int(r.headers['Content-Length']) 
 
-        def __get_info(self):
-            return 'Progress: {:6.2f}%, {:8.2f}KB, [{:.30}]'\
-                .format(self.count/self.total*100, self.total/1024, self.file_name)
+        def down(self, start, end):
 
-        def refresh(self, count):
-            self.count += count
-            # Update progress if down size > 10k
-            if (self.count - self.prev_count) > 10240:
-                self.prev_count = self.count
-                print(self.__get_info(), end=self.end_str)
-            # Finish downloading
-            if self.count >= self.total:
-                self.end_str = '\n'
-                print(self.__get_info(), end=self.end_str)
+            headers = {'Range': 'bytes={}-{}'.format(start, end)}
+            r = requests.get(self.url, headers=headers, stream=True)
+
+            with open(self.name, "rb+") as f:
+                f.seek(start)
+                f.write(r.content)
+
+        def run(self):
+            f = open(self.name, "wb")
+            f.truncate(self.size)
+            f.close()
+
+            futures = []
+            part = self.size // self.num 
+            pool = ThreadPoolExecutor(max_workers = self.num)
+            for i in range(self.num):
+                start = part * i
+                if i == self.num - 1:   
+                    end = self.size
+                else:
+                    end = start + part - 1
+                futures.append(pool.submit(self.down, start, end))
+            wait(futures)
+
     if not os.path.exists(folder):
         os.makedirs(folder)
     file_path = os.path.join(folder, file_name)
+    print("Start downloading file {}".format(os.path.basename(file_name)))
+    Downloader(file_url,CONFIG['General']['threadNum'],file_path).run()
+    print("File {} downloaded".format(os.path.basename(file_name)))
 
-    response = requests.get(file_url, stream=True)
-    length = int(response.headers.get('Content-Length'))
 
-    # TODO need to improve whether the file exists
-    if os.path.exists(file_path) and os.path.getsize(file_path) > length:
-        return True
-
-    progress = ProgressBar(file_name, length)
-
-    with open(file_path, 'wb') as file:
-        for buffer in response.iter_content(chunk_size=1024):
-            if buffer:
-                file.write(buffer)
-                progress.refresh(len(buffer))
-    return False
+def quit(signum, frame):
+    exit()
+signal.signal(signal.SIGINT, quit)
+signal.signal(signal.SIGTERM, quit)
 
 print("CloudMan Version {}".format(__version__) + "\n")
 
-# Create target Directory if don't exist
+# Create target directories if don't exist
+dirName = './Data'
+if not os.path.exists(dirName):
+    os.mkdir(dirName)
+
 dirName = './../MUSIC/CloudMan'
 if not os.path.exists(dirName):
     os.mkdir(dirName)
@@ -127,7 +163,7 @@ if CONFIG['General']['enableLogin']:
         print("Login failed: " + login['msg'])
         exit()
     UID = login['profile']['userId']
-    print("Login success")
+    print("Login success\n")
 else:
     UID = CONFIG['General']['UID']
 
@@ -142,7 +178,6 @@ for extraList in CONFIG['PlayList']['extraList'].split(','):
         })
         print("Successfully get all tracks from playlist {}".format(tmp['playlist']['name']))
 del tmp, extraList
-print("")
 
 excludeList = []
 for tmp in CONFIG['PlayList']['excludeList'].split(','):
@@ -155,13 +190,12 @@ print("The list of playlists we're going to download:")
 for list in playlist['playlist']:
     print("{} ({})".format(list['name'],list['id']))
 del list, excludeList
-print("")
 
 for list in playlist['playlist']:
     playlist_name = list['name']
     playlist_tracks = requests.get(SERVER + "playlist/detail?id=" + str(list['id'])).json()['playlist']['tracks']
 
-    print('Downloading playlist: ' + playlist_name)
+    print('\nDownloading playlist: ' + playlist_name)
     playlist_file = dirName + '/../' + format_string(playlist_name) + '.m3u'
     if os.path.exists(playlist_file):
         os.remove(playlist_file)
@@ -175,21 +209,22 @@ for list in playlist['playlist']:
 
         track_name = format_string(track['name'])
 
+        if is_downloaded(track['id']):
+            print('Music file already download')
+            continue
+
         # download song
         track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()['data'][0]['url']
-        if track_url is None:
+        if track_url is None or not validate_url(track_url):
             print('Song <<{}>> is not available due to copyright issue!'.format(track_name))
             continue
         
         track_file_name = '{}.{}'.format(str(track['id']),os.path.splitext(track_url)[-1][1:])
         track_file_path = os.path.join(dirName, track_file_name)
-        is_exist = download_file(track_url, track_file_name, dirName)
+        download_file(track_url, track_file_name, dirName)
 
         playlist_file.writelines("\n" + 'MUSIC/' + track_file_name)
-
-        if is_exist:
-            print('Music file already download:', track_file_name)
-            continue
+        playlist_file.flush()
 
         # download cover
         cover_url = track['al']['picUrl']
@@ -214,7 +249,7 @@ for list in playlist['playlist']:
             try:
                 audio = MP3(track_file_path, ID3=ID3)
                 if audio.tags is None:
-                    print('No ID3 tag, trying to add one!')
+                    print('No tags, trying to add one!')
                     try:
                         audio.add_tags()
                         audio.save()
@@ -243,11 +278,12 @@ for list in playlist['playlist']:
                 id3.save(v2_version=3)
             except HeaderNotFoundError:
                 print('Can\'t sync to MPEG frame, not an validate MP3 file!')
+                continue
         else:
             try:
                 audio = FLAC(track_file_path)
                 if audio.tags is None:
-                    print('No ID3 tag, trying to add one!')
+                    print('No tags, trying to add one!')
                     try:
                         audio.add_tags()
                         audio.save()
@@ -275,6 +311,7 @@ for list in playlist['playlist']:
                 audio.save()
             except HeaderNotFoundError:
                 print('Can\'t sync to MPEG frame, not an validate FLAC file!')
+                continue
 
         # delete cover file
         os.remove(cover_file_path)
@@ -333,5 +370,7 @@ for list in playlist['playlist']:
                         continue
                     track_lyric_file.writelines(gen_lyric_time(time) + re.sub(r"^\[\w+\:\w+\.\w+\]","",a) + "\n")
             track_lyric_file.close()
+
+        downloaded_music(track['id'])
     playlist_file.close()
     
