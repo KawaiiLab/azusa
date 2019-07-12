@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal, logging as log, coloredlogs
@@ -245,6 +245,8 @@ for list in playlist['playlist']:
 
         # download cover
         cover_url = track['al']['picUrl']
+        if cover_url is None:
+            cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg'
         cover_file_name = 'cover_{}.jpg'.format(track['id'])
         cover_file_path = os.path.join(dirName, cover_file_name)
         download_file(cover_url, cover_file_name, dirName)
