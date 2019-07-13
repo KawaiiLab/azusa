@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.4.5-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.5-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
 
 ## 简介
 
@@ -22,6 +22,7 @@
 - [x] 登陆后下载无损格式音乐
 - [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
 - [x] 多线程下载
+- [x] 下载错误自动重试
 - [ ] 处理云端歌单变动
 - [ ] 处理播放器端列表变动
 - [ ] 指定为某几个歌单生成组合列表
