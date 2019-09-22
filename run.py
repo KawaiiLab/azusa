@@ -34,12 +34,12 @@ def is_number(s):
         return False
 
 def get_lyric_time(line):
-    result = re.match(r"\[(?P<minute>\w+):(?P<second>\w+)\.(?P<millisecond>\w+)\]", line)
+    result = re.match(r"\[(?P<minute>\w+):(?P<second>\w+)[.:](?P<millisecond>\w+)\]", line)
     if result is None:
         return False
     result = result.groupdict()
     if is_number(result['minute']) and is_number(result['second']) and is_number(result['millisecond']):
-        return float(result['minute']) * 60 + float(result['second'] + '.' + result['millisecond'])
+        return float(result['minute']) * 60 + round(float(result['second'] + '.' + result['millisecond']),2)
     else:
         return False
 
@@ -105,8 +105,9 @@ def download_file(file_url, file_name, folder, useMultithread = True):
                 f.write(r.content)
 
         def run(self):
-            r = requests.head(self.url)
-            if not('Content-Length' in r.headers) or not self.useMultithread:
+            if self.useMultithread:
+                r = requests.head(self.url)
+            if not self.useMultithread or not('Content-Length' in r.headers):
                 log.info("Start downloading file {}".format(os.path.basename(file_name)) + " using single thread")
                 response = requests.get(self.url, stream=True)
 
@@ -278,12 +279,12 @@ for list in playlist['playlist']:
             playlist_file.flush()
 
             # download cover
-            cover_url = track['al']['picUrl'] + '?param=640y640'
+            cover_url = track['al']['picUrl']
             if cover_url is None:
-                cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg?param=640y640'
+                cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg'
             cover_file_name = 'cover_{}.jpg'.format(track['id'])
             cover_file_path = os.path.join(dirName, cover_file_name)
-            download_file(cover_url, cover_file_name, dirName, False)
+            download_file(cover_url + "?param=640y640", cover_file_name, dirName, False)
         except Exception as e:
             log.error('Caused an error while downloading a file: ' + str(e))
             playlist_tracks.append(track)
@@ -366,7 +367,7 @@ for list in playlist['playlist']:
 
                     artists_str = artists_str[1:]
                     artists.insert(0,artists_str)
-                    
+
                     audio['artist'] = artists
                     audio['album'] = track['al']['name']
 
@@ -381,7 +382,7 @@ for list in playlist['playlist']:
                     audio.save()
                     audio.clear_pictures()
                     audio.add_picture(image)
-                    print(audio.tags)
+                    log.debug(audio.tags)
                     audio.save()
                 except FLACNoHeaderError:
                     log.error('Can\'t sync to MPEG frame, not an validate FLAC file!')
@@ -398,6 +399,7 @@ for list in playlist['playlist']:
         os.remove(cover_file_path)
 
         try:
+            log.info("Generating lyric file")
             track_lyric_raw = requests.get(SERVER + 'lyric?id=' + str(track['id'])).json()
             log.debug(json.dumps(track_lyric_raw))
 
@@ -406,6 +408,10 @@ for list in playlist['playlist']:
                 if ('tlyric' in track_lyric_raw) and (track_lyric_raw['tlyric']['version'] != 0) and not(track_lyric_raw['tlyric']['lyric'] is None):
                     track_lyric = track_lyric_raw['lrc']['lyric'].split('\n')
                     track_lyric_trans = track_lyric_raw['tlyric']['lyric'].split('\n')
+
+                    log.debug(track_lyric)
+                    log.debug(track_lyric_trans)
+
                     lyric = []
 
                     for a in track_lyric:
@@ -416,8 +422,9 @@ for list in playlist['playlist']:
                         data = {
                             'time': time,
                             'type': 0,
-                            'content': re.sub(r"^\[\w+\:\w+\.\w+\]","",a)
+                            'content': re.sub(r"\[\w+\:\w+[.:]\w+\]","",a)
                         }
+                        log.debug(data)
                         lyric.append(data)
 
                     for a in track_lyric_trans:
@@ -428,8 +435,9 @@ for list in playlist['playlist']:
                         data = {
                             'time': time,
                             'type': 1,
-                            'content': re.sub(r"^\[\w+\:\w+\.\w+\]","",a)
+                            'content': re.sub(r"\[\w+\:\w+[.:]\w+\]","",a)
                         }
+                        log.debug(data)
                         lyric.append(data)
 
                     lyric = sorted(lyric,key = itemgetter('time', 'type'))
@@ -443,6 +451,8 @@ for list in playlist['playlist']:
 
                         lyric[key]['time'] = lyric[key + 1]['time']
 
+                    log.debug(lyric)
+
                     for a in lyric:
                         track_lyric_file.writelines("{}{}\n".format(gen_lyric_time(a['time']),a['content']))
                 else:
@@ -451,8 +461,11 @@ for list in playlist['playlist']:
                         time = get_lyric_time(a)
                         if not time:
                             continue
-                        track_lyric_file.writelines(gen_lyric_time(time) + re.sub(r"^\[\w+\:\w+\.\w+\]","",a) + "\n")
+                        track_lyric_file.writelines(gen_lyric_time(time) + re.sub(r"^\[\w+\:\w+[.:]\w+\]","",a) + "\n")
                 track_lyric_file.close()
+                log.info("Lyric generated")
+            else:
+                log.info("No lyric")
         except Exception as e:
             log.error('Caused an error while generating lyrics: ' + str(e))
             track_error[track['id']] = 1
