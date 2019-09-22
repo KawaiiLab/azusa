@@ -365,7 +365,7 @@ for list in playlist['playlist']:
                         artists_str = artists_str + '/' + artist['name']
 
                     artists_str = artists_str[1:]
-                    artists.insert(0,artists_str)
+                    artists.append(artists_str)
 
                     audio['artist'] = artists
                     audio['album'] = track['al']['name']
