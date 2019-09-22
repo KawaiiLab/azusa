@@ -283,7 +283,9 @@ for list in playlist['playlist']:
                 cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg'
             cover_file_name = 'cover_{}.jpg'.format(track['id'])
             cover_file_path = os.path.join(dirName, cover_file_name)
-            download_file(cover_url + "?param=640y640", cover_file_name, dirName, False)
+            cover_url = cover_url + '?param=640y640'
+            log.debug(cover_url)
+            download_file(cover_url, cover_file_name, dirName, False)
         except Exception as e:
             log.error('Caused an error while downloading a file: ' + str(e))
             playlist_tracks.append(track)
