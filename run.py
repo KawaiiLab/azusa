@@ -357,9 +357,16 @@ for list in playlist['playlist']:
                             log.error('Error occur when add tags:' + str(e))
 
                     audio['title'] = track['name']
+
                     artists = []
+                    artists_str = ''
                     for artist in track['ar']:
                         artists.append(artist['name'])
+                        artists_str = artists_str + '/' + artist['name']
+
+                    artists_str = artists_str[1:]
+                    artists.insert(0,artists_str)
+                    
                     audio['artist'] = artists
                     audio['album'] = track['al']['name']
 
@@ -374,6 +381,7 @@ for list in playlist['playlist']:
                     audio.save()
                     audio.clear_pictures()
                     audio.add_picture(image)
+                    print(audio.tags)
                     audio.save()
                 except FLACNoHeaderError:
                     log.error('Can\'t sync to MPEG frame, not an validate FLAC file!')
