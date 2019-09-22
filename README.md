@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.5.2-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.5.2-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg) ![Codacy](https://img.shields.io/codacy/grade/bc1e4b82b99148aca374b22108847f47)
 
 ## 简介
 
@@ -14,25 +14,25 @@
 经小霖测试现在的代码应该已经基本稳定了，如果还是有 BUG 或者有可以改进的地方欢迎提 IS 或 PR 嗷 (小声
 
 ## Features / TODOs
-- [x] 下载用户歌单
-- [x] 填充音乐元数据
-- [x] 下载并格式化歌词及翻译
-- [x] 允许排除 / 附加歌单
-- [x] 为本地文件夹生成列表
-- [x] 登陆后下载无损格式音乐
-- [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
-- [x] 多线程下载
-- [x] 下载错误自动重试
-- [x] 处理云端歌单变动
-- [ ] 处理播放器端列表变动
-- [ ] 指定为某几个歌单生成组合列表
+-   [x] 下载用户歌单
+-   [x] 填充音乐元数据
+-   [x] 下载并格式化歌词及翻译
+-   [x] 允许排除 / 附加歌单
+-   [x] 为本地文件夹生成列表
+-   [x] 登陆后下载无损格式音乐
+-   [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
+-   [x] 多线程下载
+-   [x] 下载错误自动重试
+-   [x] 处理云端歌单变动
+-   [ ] 处理播放器端列表变动
+-   [ ] 指定为某几个歌单生成组合列表
 
 ## 依赖
 
-- Python 3.x 及 pip3
-- [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
-  - 本项目现使用所有 API 均依赖于此项目
-  - 推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
+-   Python 3.x 及 pip3
+-   [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
+  -   本项目现使用所有 API 均依赖于此项目
+  -   推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
 
 ## 食用方法
 

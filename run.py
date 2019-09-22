@@ -11,7 +11,6 @@ import os, re, requests, configparser, json, signal, logging as log, coloredlogs
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3, APIC, TPE1, TIT2, TALB, error
 from mutagen.flac import Picture, FLAC, FLACNoHeaderError
-from datetime import datetime
 from operator import itemgetter
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -475,4 +474,3 @@ for list in playlist['playlist']:
         downloaded_music(track['id'])
     playlist_file.writelines("\r\n")
     playlist_file.close()
-    os.chmod(playlist_file_path,0o777)
