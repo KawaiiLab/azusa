@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "lolilin@outlook.com"
 __license__ = "MIT"
-__version__ = "0.5"
+__version__ = "0.5.2"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal, logging as log, coloredlogs
