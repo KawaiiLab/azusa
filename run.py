@@ -178,16 +178,16 @@ if CONFIG['PlayList']['genListForFolder']:
             if dir_name == "CloudMan":
                 continue
             playlist_file = open("./../MUSIC/{}.m3u".format(dir_name), 'w', encoding='utf8')
-            playlist_file.writelines("#EXTM3U\n")
+            playlist_file.writelines("#EXTM3U\r\n")
             folder = os.listdir(os.path.join("./../MUSIC", dir_name))
             for track in folder:
                 if not os.path.isdir(os.path.join("./../MUSIC", dir_name,track)):
                     if track.endswith('flac') or track.endswith('mp3'):
-                        playlist_file.writelines('\n{}/{}'.format(dir_name,track))
+                        playlist_file.writelines('\r\n{}/{}'.format(dir_name,track))
             playlist_file.close()
-            log.info("Successfully generated playlist for folder: {}".format(dir_name))
+            log.info("Successfully generated plst for folder: {}".format(dir_name))
 
-if CONFIG['General']['enableLogin']:
+if CONFIG['General']['enableLogin'] == 'True':
     login = requests.get(SERVER + "login/cellphone?phone={}&password={}".format(CONFIG['General']['cellphone'],CONFIG['General']['password'])).json()
     log.debug(json.dumps(login))
     if not login['code'] == 200:
@@ -235,7 +235,7 @@ for list in playlist['playlist']:
         os.remove(playlist_file)
 
     playlist_file = open(playlist_file, 'w', encoding='utf8')
-    playlist_file.writelines("#EXTM3U\n")
+    playlist_file.writelines("#EXTM3U\r\n")
     i = 0
     track_error = {}
     for track in playlist_tracks:
@@ -247,9 +247,9 @@ for list in playlist['playlist']:
         if is_downloaded(track['id']):
             log.info('Music file already download')
             if os.path.isfile(os.path.join(dirName,str(track['id']) + '.mp3')):
-                playlist_file.writelines("\n" + 'MUSIC/' + str(track['id']) + '.mp3')
+                playlist_file.writelines("\r\n" + 'MUSIC/' + str(track['id']) + '.mp3')
             else:
-                playlist_file.writelines("\n" + 'MUSIC/' + str(track['id']) + '.flac')
+                playlist_file.writelines("\r\n" + 'MUSIC/' + str(track['id']) + '.flac')
             playlist_file.flush()
             continue
 
@@ -278,9 +278,9 @@ for list in playlist['playlist']:
             playlist_file.flush()
 
             # download cover
-            cover_url = track['al']['picUrl']
+            cover_url = track['al']['picUrl'] + '?param=640y640'
             if cover_url is None:
-                cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg'
+                cover_url = 'http://p1.music.126.net/9A346Q9fbCSmylIkId7U3g==/109951163540324581.jpg?param=640y640'
             cover_file_name = 'cover_{}.jpg'.format(track['id'])
             cover_file_path = os.path.join(dirName, cover_file_name)
             download_file(cover_url, cover_file_name, dirName, False)
@@ -452,6 +452,6 @@ for list in playlist['playlist']:
             continue
 
         downloaded_music(track['id'])
-    playlist_file.writelines("\n")
+    playlist_file.writelines("\r\n")
     playlist_file.close()
     os.chmod(playlist_file_path,0o777)
