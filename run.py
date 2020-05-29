@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 __author__ = "XiaoLin"
-__email__ = "lolilin@outlook.com"
+__email__ = "i@amxiaol.in"
 __license__ = "MIT"
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal, logging as log, coloredlogs
@@ -18,7 +18,7 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read('config.ini')
 SERVER = CONFIG['General']['server']
 requests = requests.Session()
-coloredlogs.install(level=CONFIG['General']['logLevel'], fmt="%(asctime)s %(name)s[%(process)d] %(levelname)s %(message)s")
+coloredlogs.install(level=CONFIG['General']['logLevel'], fmt="%(asctime)s %(levelname)s %(message)s")
 def format_string(string):
     """
     Replace illegal character with ' '
@@ -59,30 +59,31 @@ def gen_lyric_time(time):
     
     return "[{}:{}]".format(minute,second)
 
+downloadedFile = []
+if os.path.isfile('./Data/downloaded.json'):
+    downloadedFile = json.loads(open('./Data/downloaded.json','r').read())
+else:
+    downloadedFile = []
+
 def downloaded_music(id):
-    if os.path.isfile('./Data/downloaded.json'):
-        data = json.loads(open('./Data/downloaded.json','r').read())
-    else:
-        data = []
-    data.append(id)
-    data = open('./Data/downloaded.json','w').write(json.dumps(data))
-    
+    global downloadedFile
+    downloadedFile.append(id)
+    open('./Data/downloaded.json','w').write(json.dumps(downloadedFile))
     return True
 
 def is_downloaded(id):
-    if os.path.isfile('./Data/downloaded.json'):
-        data = json.loads(open('./Data/downloaded.json','r').read())
-        if id in data:
-            return True
+    global downloadedFile
+    if id in downloadedFile:
+        return True
     return False
 
 def validate_url(url):
     regex = re.compile(
-        r'^(?:http|ftp)s?://' # http:// or https://
+        r'^(?:http|ftp)s?://'
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-        r'localhost|' #localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-        r'(?::\d+)?' # optional port
+        r'localhost|'
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        r'(?::\d+)?'
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
     return re.match(regex, url) is not None
 
@@ -185,7 +186,7 @@ if CONFIG['PlayList']['genListForFolder']:
                     if track.endswith('flac') or track.endswith('mp3'):
                         playlist_file.writelines('\r\n{}/{}'.format(dir_name,track))
             playlist_file.close()
-            log.info("Successfully generated plst for folder: {}".format(dir_name))
+            log.info("Successfully generated playlist for folder: {}".format(dir_name))
 
 if CONFIG['General']['enableLogin'] == 'True':
     login = requests.get(SERVER + "login/cellphone?phone={}&password={}".format(CONFIG['General']['cellphone'],CONFIG['General']['password'])).json()
@@ -209,7 +210,6 @@ for extraList in CONFIG['PlayList']['extraList'].split(','):
             'name': tmp['playlist']['name'],
             'id': tmp['playlist']['id']
         })
-        log.info("Successfully get all tracks from playlist {}".format(tmp['playlist']['name']))
 del tmp, extraList
 
 excludeList = []
@@ -219,14 +219,14 @@ for tmp in CONFIG['PlayList']['excludeList'].split(','):
 
 playlist['playlist'] = [x for x in playlist['playlist'] if x['id'] not in excludeList]
 
-log.info("The list of playlists we're going to download:")
+log.info("Playlist list:")
 for list in playlist['playlist']:
     log.info("{} ({})".format(list['name'],list['id']))
 del list, excludeList
 
 for list in playlist['playlist']:
     playlist_name = list['name']
-    playlist_tracks = requests.get(SERVER + "playlist/detail?id=" + str(list['id'])).json()['playlist']['tracks']
+    playlist_tracks = requests.get(SERVER + "playlist/detail?id=" + str(list['id'])).json()['playlist']['trackIds']
     log.debug(json.dumps(playlist_tracks))
 
     log.info('Downloading playlist: ' + playlist_name)
@@ -240,12 +240,10 @@ for list in playlist['playlist']:
     track_error = {}
     for track in playlist_tracks:
         i += 1
-        log.info('{}: {}'.format(i, track['name']))
-
-        track_name = format_string(track['name'])
+        log.info('{}: {}'.format(i, track['id']))
 
         if is_downloaded(track['id']):
-            log.info('Music file already download')
+            log.info('Music file exists')
             if os.path.isfile(os.path.join(dirName,str(track['id']) + '.mp3')):
                 playlist_file.writelines("\r\n" + 'MUSIC/' + str(track['id']) + '.mp3')
             else:
@@ -253,12 +251,17 @@ for list in playlist['playlist']:
             playlist_file.flush()
             continue
 
-        status = check_retry_limit(track['id'],track_error)
+        status = check_retry_limit(track['id'], track_error)
         if status == 1:
-            log.error('CANNOT download music: ' + track['name'])
+            log.error('CANNOT download music: ' + track['id'])
             continue
         elif status == 2:
-            log.warning('Retring redownload music: ' + track['name'])
+            log.warning('Retring download music: ' + track['id'])
+
+        track = requests.get(SERVER + 'song/detail?ids=' + str(track['id'])).json()['songs'][0]
+        log.debug(json.dumps(track))
+
+        track_name = format_string(track['name'])
 
         # download song
         track_url = requests.get(SERVER + 'song/url?br={}&id='.format(CONFIG['General']['bitRate']) + str(track['id'])).json()
@@ -287,7 +290,7 @@ for list in playlist['playlist']:
             log.debug(cover_url)
             download_file(cover_url, cover_file_name, dirName, False)
         except Exception as e:
-            log.error('Caused an error while downloading a file: ' + str(e))
+            log.error('Error while downloading a file: ' + str(e))
             playlist_tracks.append(track)
             track_error[track['id']] = 1
             continue
@@ -303,7 +306,7 @@ for list in playlist['playlist']:
         except IOError:
             log.warning('Can\'t open image:' + cover_file_path)
         except Exception as e:
-            log.error('Caused an error while resizing cover: ' + str(e))
+            log.error('Error while resizing cover: ' + str(e))
             playlist_tracks.append(track)
             track_error[track['id']] = 1
             continue
@@ -320,7 +323,7 @@ for list in playlist['playlist']:
                             audio.add_tags()
                             audio.save()
                         except error as e:
-                            log.error('Error occur when add tags:' + str(e))
+                            log.error('Error while adding tags:' + str(e))
                     
                     # Modify ID3 tags
                     id3 = ID3(track_file_path)
@@ -343,7 +346,7 @@ for list in playlist['playlist']:
                     id3.add(TALB(encoding=3,text=track['al']['name']))
                     id3.save(v2_version=3)
                 except HeaderNotFoundError:
-                    log.error('Can\'t sync to MPEG frame, not an validate MP3 file!')
+                    log.error('Not a validate MP3 file!')
                     playlist_tracks.append(track)
                     track_error[track['id']] = 1
                     continue
@@ -356,7 +359,7 @@ for list in playlist['playlist']:
                             audio.add_tags()
                             audio.save()
                         except error as e:
-                            log.error('Error occur when add tags:' + str(e))
+                            log.error('Error occurs when add tags:' + str(e))
 
                     audio['title'] = track['name']
 
@@ -386,12 +389,12 @@ for list in playlist['playlist']:
                     log.debug(audio.tags)
                     audio.save()
                 except FLACNoHeaderError:
-                    log.error('Can\'t sync to MPEG frame, not an validate FLAC file!')
+                    log.error('Not a validate FLAC file!')
                     playlist_tracks.append(track)
                     track_error[track['id']] = 1
                     continue
         except Exception as e:
-            log.error('Caused an error while adding metadata: ' + str(e))
+            log.error('Error while adding metadata: ' + str(e))
             playlist_tracks.append(track)
             track_error[track['id']] = 1
             continue
@@ -468,7 +471,7 @@ for list in playlist['playlist']:
             else:
                 log.info("No lyric")
         except Exception as e:
-            log.error('Caused an error while generating lyrics: ' + str(e))
+            log.error('Error while generating lyrics: ' + str(e))
             track_error[track['id']] = 1
             playlist_tracks.append(track)
             continue
