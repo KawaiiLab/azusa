@@ -1,6 +1,6 @@
 # 更新日志
 
-## 当前版本 v0.5.3 Stable Version
+## 当前版本 v0.5.4 Stable Version
 
 - 修复无法获取歌单内容的问题
 - 优化若干细节

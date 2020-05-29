@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.5.3-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg) ![Codacy](https://img.shields.io/codacy/grade/bc1e4b82b99148aca374b22108847f47)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.5.4-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg) ![Codacy](https://img.shields.io/codacy/grade/bc1e4b82b99148aca374b22108847f47)
 
 ## 简介
 
