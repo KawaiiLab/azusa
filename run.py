@@ -4,7 +4,7 @@
 __author__ = "XiaoLin"
 __email__ = "i@amxiaol.in"
 __license__ = "MIT"
-__version__ = "0.5.3"
+__version__ = "0.5.4"
 __status__ = "Production"
 
 import os, re, requests, configparser, json, signal, logging as log, coloredlogs
@@ -258,7 +258,11 @@ for list in playlist['playlist']:
         elif status == 2:
             log.warning('Retring download music: ' + track['id'])
 
-        track = requests.get(SERVER + 'song/detail?ids=' + str(track['id'])).json()['songs'][0]
+        track = requests.get(SERVER + 'song/detail?ids=' + str(track['id'])).json()['songs']
+        if (len(track) == 0):
+            log.warning("Song not found")
+            continue
+        track = track[0]
         log.debug(json.dumps(track))
 
         track_name = format_string(track['name'])
