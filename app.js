@@ -339,13 +339,21 @@ if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
                 if (lyric.type === 0 || i === 0 || lyricModified[i - 1].type === 1
                 || lyricModified[i - 1].time !== lyric.time) continue
 
-                if (i === (lyricModified.length - 1)) {
+                if (config('mergeTranslation', false)) {
+                  lyricModified[i - 1].content += ' - ' + lyric.content
+                } else if (i === (lyricModified.length - 1)) {
                   if (lyric.content !== '') lyric.time += 100
                 } else {
                   lyric.time = lyricModified[i + 1].time
                 }
 
                 lyricModified[i] = lyric
+              }
+
+              if (config('mergeTranslation', false)) {
+                _.remove(lyricModified, (v) => {
+                  return v.type === 1
+                })
               }
 
               let lyric = []
