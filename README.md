@@ -26,6 +26,7 @@
 -   [x] 多线程下载
 -   [x] 下载错误自动重试
 -   [x] 处理云端歌单变动
+-   [x] 合并歌词原文与翻译
 -   [ ] 处理播放器端列表变动
 -   [ ] 指定为某几个歌单生成组合列表
 
@@ -42,6 +43,9 @@
 cm_logLevel = info
 # 日志等级
 
+cm_generatePlaylistFile = true
+# 是否为 /MUSIC 目录中的文件夹生成播放列表
+
 cm_api = http://10.0.0.120:3000
 # NeteaseCloudMusicApi 服务地址
 cm_phone = 13912345678
@@ -56,6 +60,9 @@ cm_excludePlaylist =
 
 cm_bitRate = 9900000
 # 下载音质
+
+cm_mergeTranslation = false
+# 是否将歌词与翻译合并为一行
 
 cm_downloadThreads = 4
 # 下载文件的线程数
