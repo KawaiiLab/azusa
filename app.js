@@ -15,7 +15,9 @@ const { default: PQueue } = require('p-queue')
 const config = (name, defaultValue = '') => {
   if (process.env['cm_' + name]) {
     const value = `${process.env['cm_' + name]}`.trim()
-    return _.isNumber(defaultValue) ? parseInt(value) : value
+    if (_.isNumber(defaultValue)) return parseInt(value)
+    else if (_.isBoolean(defaultValue)) return value == 'true'
+    else return value
   }
   else return defaultValue
 }
@@ -127,6 +129,33 @@ if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
       if (filename.endsWith('.lrc')) that.downloaded.add(trackId)
       if (filename.endsWith('.mp3')) that.downloadedFormat[trackId] = 'mp3'
       else if (filename.endsWith('.flac')) that.downloadedFormat[trackId] = 'flac'
+    }
+  }
+}
+
+// Process user dir
+{
+  if (config('generatePlaylistFile', true)) {
+    const dirname = __root + '../../'
+    const dirlist = fs.readdirSync(dirname)
+    for (const dirn of dirlist) {
+      const userDirname = dirname + dirn + '/'
+
+      if (dirn === 'CloudMan') continue
+      if (!fs.existsSync(userDirname) || !fs.lstatSync(userDirname).isDirectory()) continue
+
+      const audioList = []
+      const filelist = fs.readdirSync(userDirname)
+
+      for (const audioFile of filelist) {
+        if (!audioFile.startsWith('._')
+        && (audioFile.endsWith('mp3')
+          || audioFile.endsWith('flac')
+          || audioFile.endsWith('pcm')
+          || audioFile.endsWith('wav')
+          || audioFile.endsWith('aac'))) audioList.push(dirn + '/' + audioFile)
+      }
+      fs.writeFileSync(dirname + dirn + '.m3u', '#EXTM3U\n\n' + audioList.join('\n'))
     }
   }
 }
@@ -278,7 +307,7 @@ if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
               flac.setTag('DATE=' + info.year)
               flac.setTag('YEAR=' + info.year)
               flac.setTag('TRCK=' + info.no)
-              
+
               if (hasCover) flac.importPicture(info.cover)
 
               for (let i = 0; i < 3; i++) flac.save()
