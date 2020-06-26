@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.6-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg) ![Codacy](https://img.shields.io/codacy/grade/bc1e4b82b99148aca374b22108847f47)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.6-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/LoliLin/CloudMan?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LoliLin/CloudMan&amp;utm_campaign=Badge_Grade)
 
 ## 简介
 
@@ -16,26 +16,26 @@
 经测试现在的代码应该已经基本稳定了，如果还是有 BUG 或者有可以改进的地方欢迎提 IS 或 PR 嗷 (小声
 
 ## Features / TODOs
--   [x] 下载用户歌单
--   [x] 填充音乐元数据
--   [x] 下载并格式化歌词及翻译
--   [x] 允许排除 / 附加歌单
--   [x] 为本地文件夹生成列表
--   [x] 登陆后下载无损格式音乐
--   [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
--   [x] 多线程下载
--   [x] 下载错误自动重试
--   [x] 处理云端歌单变动
--   [x] 合并歌词原文与翻译
--   [ ] 处理播放器端列表变动
--   [ ] 指定为某几个歌单生成组合列表
+- [x] 下载用户歌单
+- [x] 填充音乐元数据
+- [x] 下载并格式化歌词及翻译
+- [x] 允许排除 / 附加歌单
+- [x] 为本地文件夹生成列表
+- [x] 登陆后下载无损格式音乐
+- [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
+- [x] 多线程下载
+- [x] 下载错误自动重试
+- [x] 处理云端歌单变动
+- [x] 合并歌词原文与翻译
+- [ ] 处理播放器端列表变动
+- [ ] 指定为某几个歌单生成组合列表
 
 ## 依赖
 
--   Node.js 10+
--   [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
-  -   本项目现使用所有 API 均依赖于此项目
-  -   推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
+- Node.js 10+
+- [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
+  - 本项目现使用所有 API 均依赖于此项目
+  - 推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
 
 ## 配置
 
@@ -72,10 +72,10 @@ cm_playlistConcurrency = 3
 
 ## 食用方法
 
-1. 在 WalkMan 根目录输入 `git clone https://github.com/LoliLin/CloudMan.git -b node`
-2. 进入 `CloudMan` 目录, 输入 `npm i`
-3. 将 `.env.example` 重命名为 `.env` 并按需修改
-4. 输入 `npm start` 即可
+  1. 在 WalkMan 根目录输入 `git clone https://github.com/LoliLin/CloudMan.git -b node`
+  2. 进入 `CloudMan` 目录, 输入 `npm i`
+  3. 将 `.env.example` 重命名为 `.env` 并按需修改
+  4. 输入 `npm start` 即可
 
 下载线程数建议设置为 4 及 4 以下, 若超过 4 疑似会被强制断开
 

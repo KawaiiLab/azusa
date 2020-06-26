@@ -12,16 +12,21 @@ module.exports = {
   },
   rules: {
     indent: [
-      "error",
+      'error',
       2
     ],
     quotes: [
-      "error",
-      "single"
+      'error',
+      'single'
     ],
     semi: [
-      "error",
-      "never"
-    ]
-  }
+      'error',
+      'never'
+    ],
+    'prettier/prettier': 'error'
+  },
+  'plugins': [
+    'markdown',
+    'prettier'
+  ]
 }
