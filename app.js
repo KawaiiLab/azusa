@@ -1,5 +1,6 @@
 require('dotenv').config()
 
+const os = require('os')
 const fs = require('fs')
 const sha1 = require('sha1')
 const path = require('path')
@@ -130,7 +131,9 @@ if (config('generatePlaylistFile', true)) {
     trackId = parseInt(trackId)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
-      const savePath = path.resolve(__root, sha1(trackId).substr(0, 2))
+      const tmpPath = os.tmpdir()
+      const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
+      const savePath = path.resolve(tmpPath, 'CloudMan/', sha1(trackId).substr(0, 2))
 
       if (that.downloaded.has(trackId)) {
         logger.info(`Track ${trackId} existed!`)
@@ -144,6 +147,7 @@ if (config('generatePlaylistFile', true)) {
       if (!trackInfo.title) {
         trackInfo = metadata.generateTrackMetadata(await api.getTrackInfo(trackId))
       }
+      logger.info(`[Track: ${trackInfo.title}] Start processing...`)
 
       // Download files
       let filetype = 'flac'
@@ -158,18 +162,18 @@ if (config('generatePlaylistFile', true)) {
         }
         if (trackUrl.endsWith('mp3')) filetype = 'mp3'
 
-        logger.info(`[Track: ${trackInfo.title}][Music file] Start downloading...`)
+        logger.debug(`[Track: ${trackInfo.title}][Music file] Start downloading...`)
         await general.downloadFile(trackInfo, trackUrl, savePath)
 
         if (trackInfo.albumImg) {
-          logger.info(`[Track: ${trackInfo.title}][Cover] Start downloading...`)
+          logger.debug(`[Track: ${trackInfo.title}][Cover] Start downloading...`)
           await general.downloadFile(trackInfo, trackInfo.albumImg + '?param=640y640', savePath)
         }
       }
 
       // Metadata processing
+      const trackPath = path.resolve(savePath, trackId + '.' + filetype)
       {
-        const trackPath = path.resolve(savePath, trackId + '.' + filetype)
         const coverPath = path.resolve(savePath, trackId + '.jpg')
 
         metadata.writeMetadata(trackInfo, trackPath, coverPath)
@@ -184,13 +188,20 @@ if (config('generatePlaylistFile', true)) {
           logger.debug('No lyric for track', trackInfo.name)
         } else {
           const lyricStr = lyric.generateLyric(trackId, lyricData)
-          fs.writeFileSync(path.resolve(savePath, trackId + '.lrc'), lyricStr)
+          fs.writeFileSync(path.resolve(realPath, trackId + '.lrc'), lyricStr)
         }
       }
+
+      logger.debug(`[Track: ${trackInfo.title}] Start moving...`)
+      if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
+      fs.copyFileSync(trackPath, path.resolve(realPath, trackId + '.' + filetype))
+      fs.unlinkSync(trackPath)
+      logger.debug(`[Track: ${trackInfo.title}] Moved!`)
 
       that.downloaded.add(trackId)
       trackList[trackId].done = true
       trackList[trackId].format = filetype
+      logger.info(`[Track: ${trackInfo.title}] Success!`)
     })
   }
 

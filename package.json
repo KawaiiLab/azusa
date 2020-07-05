@@ -30,6 +30,7 @@
     "multipart-download": "^1.2.4",
     "node-fetch": "^2.6.0",
     "node-id3": "^0.1.17",
+    "os": "^0.1.1",
     "p-queue": "^6.4.0",
     "p-retry": "^4.2.0",
     "path": "^0.12.7",

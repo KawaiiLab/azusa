@@ -39,7 +39,7 @@ module.exports = {
             })
 
             fileStream.on('finish', () => {
-              logger.info(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
+              logger.debug(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
               resolve()
             })
           })
@@ -55,7 +55,7 @@ module.exports = {
             })
             .on('end', (buffer) => {
               fs.writeFileSync(path.resolve(savePath, filename), buffer)
-              logger.info(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
+              logger.debug(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
               resolve()
             })
         }
