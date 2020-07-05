@@ -1,118 +1,28 @@
-const _ = require('lodash')
-const fs = require('fs')
 require('dotenv').config()
-const log4js = require('log4js')
-const logger = log4js.getLogger('CloudMan')
-const nodeFetch = require('node-fetch')
-const fetch = require('fetch-cookie')(nodeFetch)
-const pRetry = require('p-retry')
+
+const fs = require('fs')
 const sha1 = require('sha1')
-const MultipartDownload = require('multipart-download')
-const nodeID3 = require('node-id3')
-const Metaflac = require('metaflac-js2')
+const path = require('path')
 const { default: PQueue } = require('p-queue')
 
-const config = (name, defaultValue = '') => {
-  if (process.env['cm_' + name]) {
-    const value = `${process.env['cm_' + name]}`.trim()
-    if (_.isNumber(defaultValue)) return parseInt(value)
-    else if (_.isBoolean(defaultValue)) return value == 'true'
-    else return value
-  }
-  else return defaultValue
-}
+const api = require('./modules/api')
+const lyric = require('./modules/lyric')
+const config = require('./modules/config')
+const logger = require('./modules/logger')
+const general = require('./modules/general')
+const metadata = require('./modules/metadata')
 
 const that = {
   downloaded: new Set(),
-  downloadedFormat: {},
-  uid: 0,
-
-  replaceChar(str) {
-    // eslint-disable-next-line no-useless-escape
-    return `${str}`.replace(/[\\\/:\*\?"<>\|\t]/gm, ' ')
-  },
-
-  downloadFile(trackInfo, fileURL, savePath) {
-    fileURL = fileURL.replace('https', 'http')
-    logger.debug('File URL', fileURL)
-    let isPhoto = false, msg = 'Music file'
-    if (fileURL.endsWith('640')) {
-      isPhoto = true
-      msg = 'Cover'
-    }
-
-    const filename = trackInfo['id'] + ((isPhoto) ? '.jpg' : ((fileURL.endsWith('mp3')) ? '.mp3' : '.flac'))
-
-    return pRetry(async () => {
-      return await new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), (isPhoto) ? 5000 : 20000)
-
-        if (isPhoto) {
-          fetch(fileURL).then((res) => {
-            const fileStream = fs.createWriteStream(savePath + filename)
-            res.body.pipe(fileStream)
-
-            res.body.on('error', (error) => {
-              logger.warn(`[Track: ${trackInfo['name']}][${msg}]`, error)
-              reject(error)
-            })
-  
-            fileStream.on('finish', () => {
-              logger.info(`[Track: ${trackInfo['name']}][${msg}] Download completed!`)
-              resolve()
-            })
-          })
-        } else {
-          new MultipartDownload()
-            .start(fileURL, {
-              numOfConnections: config('downloadThreads', 4),
-              saveDirectory: savePath,
-              fileName: filename
-            })
-            .on('error', (error) => {
-              logger.warn(`[Track: ${trackInfo['name']}][${msg}]`, error)
-              reject(error)
-            })
-            .on('end', () => {
-              logger.info(`[Track: ${trackInfo['name']}][${msg}] Download completed!`)
-              resolve()
-            })
-        }
-      })
-    }, {
-      retries: 3,
-      onFailedAttempt: (error) => {
-        logger.warn(`[Track: ${trackInfo['name']}][${msg}] Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
-      }
-    })
-  },
-
-  modifyLyric(str, type = 0) {
-    const regex = /\[(\w+):(\w+)[.:](\w+)\]/gm
-    const modified = []
-    const lines = `${str}`.split('\n')
-
-    for (const line of lines) {
-      const result = regex.exec(line)
-      if (!result) continue
-      modified.push({
-        time: parseInt(result[1]) * 60 + parseInt(result[2]) + parseFloat('0.' + result[3]),
-        type,
-        content: line.replace(regex, '').trim()
-      })
-    }
-
-    return modified
-  }
+  downloadedFormat: {}
 }
 
 let __root = ''
-logger.level = config('logLevel', 'info')
 
-if (fs.existsSync(__dirname + '/MUSIC')) __root = __dirname + '/MUSIC/'
-else __root = __dirname + '/../MUSIC/'
+if (fs.existsSync(path.resolve('MUSIC'))) __root = path.resolve('MUSIC')
+else __root = path.resolve('../MUSIC')
 
-if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
+if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
   fs.mkdirSync(__root, {
     recursive: true
   })
@@ -122,7 +32,7 @@ if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
 {
   const dirlist = fs.readdirSync(__root)
   for (const dirname of dirlist) {
-    const filelist = fs.readdirSync(__root + dirname + '/')
+    const filelist = fs.readdirSync(path.resolve(__root, dirname))
     for (const filename of filelist) {
       if (filename.startsWith('._')) continue
       const trackId = parseInt(filename.split('.')[0])
@@ -134,261 +44,180 @@ if (!fs.existsSync(__root = __root + 'CloudMan/MUSIC/')) {
 }
 
 // Process user dir
-{
-  if (config('generatePlaylistFile', true)) {
-    const dirname = __root + '../../'
-    const dirlist = fs.readdirSync(dirname)
-    for (const dirn of dirlist) {
-      const userDirname = dirname + dirn + '/'
-
-      if (dirn === 'CloudMan') continue
-      if (!fs.existsSync(userDirname) || !fs.lstatSync(userDirname).isDirectory()) continue
-
-      const audioList = []
-      const filelist = fs.readdirSync(userDirname)
-
-      for (const audioFile of filelist) {
-        if (!audioFile.startsWith('._')
-        && (audioFile.endsWith('mp3')
-          || audioFile.endsWith('flac')
-          || audioFile.endsWith('pcm')
-          || audioFile.endsWith('wav')
-          || audioFile.endsWith('aac'))) audioList.push(dirn + '/' + audioFile)
-      }
-      fs.writeFileSync(dirname + dirn + '.m3u', '#EXTM3U\n\n' + audioList.join('\n'))
-    }
-  }
+if (config('generatePlaylistFile', true)) {
+  general.genUserPlaylistFile(__root)
 }
 
 (async () => {
   // Login to Cloudmusic
+  logger.info('Logging in to Cloudmusic')
+  await api.login(config('phone'), config('password'))
+
+  // Generate infomation for downloading
+  const playlistList = []
+  const trackList = {}
   {
-    logger.info('Login to Cloudmusic')
-    let login = await fetch(config('api') + `/login/cellphone?phone=${config('phone')}&password=${config('password')}`)
-    login = await login.json()
-    logger.debug(login)
-    if (login.code === 200) {
-      logger.info('Login success!')
-      that.uid = login['profile']['userId']
-    } else {
-      logger.error('Login failed!')
-      throw new Error(login.msg)
-    }
-  }
+    // Generate for playlist(歌单)
+    {
+      logger.info('Requesting user\'s playlists')
+      const playlist = await api.getUserPlaylist()
+      const list = new Set()
+      for (const plist of playlist) list.add(plist.id)
 
-  // Playlist list genreating
-  let playlist = new Set()
-  {
-    logger.info('Requesting user\'s playlists')
-    let plist = await fetch(config('api') + '/user/playlist?uid=' + that.uid)
-    plist = await plist.json()
-    logger.debug(plist)
-    for (const i in plist['playlist']) {
-      playlist.add(plist['playlist'][i].id)
-    }
+      const extraPlaylist = config('extraPlaylist', '').split(',')
+      extraPlaylist.forEach((item) => list.add(parseInt(item.trim())))
 
-    const extraPlaylist = config('extraPlaylist', '').split(',')
-    extraPlaylist.forEach((item) => playlist.add(parseInt(item.trim())))
+      const excludePlaylist = config('excludePlaylist', '').split(',')
+      excludePlaylist.forEach((item) => list.delete(parseInt(item.trim())))
 
-    const excludePlaylist = config('excludePlaylist', '').split(',')
-    excludePlaylist.forEach((item) => playlist.delete(parseInt(item.trim())))
+      for (const playlistId of list) {
+        const playlistInfo = await api.getPlaylistInfo(playlistId)
+        const trackIds = []
+        for (const track of playlistInfo.trackIds) {
+          trackList[track.id] = {}
+          trackIds.push(parseInt(track.id))
+        }
 
-    logger.info('Playlists', playlist)
-  }
-
-  // Playlists processing
-  {
-    for (const playlistId of playlist) {
-      const queue = new PQueue({concurrency: config('playlistConcurrency', 2)})
-      logger.info('Requesting details of playlist', playlistId)
-
-      let listData = await fetch(config('api') + '/playlist/detail?id=' + playlistId)
-      listData = await listData.json()
-
-      const trackList = []
-      const trackListPath = __root + '../' + that.replaceChar(listData['playlist']['name']) + '.m3u'
-      const intervalId = setInterval(() => {
-        const filecontent = '#EXTM3U\n\n' + trackList.join('\n')
-        fs.writeFileSync(trackListPath, filecontent)
-      }, 1000)
-
-      listData = listData['playlist']['trackIds']
-
-      for (let trackId of listData) {
-        queue.add(async () => {
-          trackId = parseInt(trackId['id'])
-          const savePath = __root + sha1(trackId).substr(0, 2) + '/'
-
-          if (that.downloaded.has(trackId)) {
-            logger.info(`Track ${trackId} existed!`)
-            trackList.push(savePath + trackId + '.' + that.downloadedFormat[trackId])
-            return
-          }
-
-          logger.debug('Requesting details of track', trackId)
-
-          let trackInfo = await fetch(config('api') + '/song/detail?ids=' + trackId)
-          trackInfo = await trackInfo.json()
-          logger.debug(trackInfo)
-
-          if (trackInfo['songs'].length === 0) {
-            logger.warn(`Track ${trackId} not found`)
-            return
-          }
-          trackInfo = trackInfo['songs'][0]
-
-          let filetype = 'flac'
-          let hasCover = false
-          if (!fs.existsSync(savePath)) fs.mkdirSync(savePath, { recursive: true })
-
-          // Download files
-          {
-            logger.debug('Requesting URL of track', trackInfo['name'])
-            let trackURL = await fetch(config('api') + `/song/url?id=${trackId}&br=${config('bitRate', 9900000)}`)
-            trackURL = await trackURL.json()
-            logger.debug(trackURL)
-
-            trackURL = trackURL['data'][0]
-            if (!trackURL || !trackURL['url']) {
-              logger.info(`Track ${trackInfo['name']} is not available due to copyright issue!`)
-              return
-            }
-            trackURL = `${trackURL['url']}`
-            if (trackURL.endsWith('mp3')) filetype = 'mp3'
-          
-            logger.info(`[Track: ${trackInfo['name']}][Music file] Start downloading...`)
-            await that.downloadFile(trackInfo, trackURL, savePath)
-
-            const coverURL = trackInfo['al']['picUrl'] || null
-            if (coverURL) {
-              logger.info(`[Track: ${trackInfo['name']}][Cover] Start downloading...`)
-              await that.downloadFile(trackInfo, coverURL + '?param=640y640', savePath)
-              hasCover = true
-            }
-          }
-
-          // Metadata processing
-          {
-            const filepath = savePath + trackId + '.' + filetype
-
-            const info = {
-              title: trackInfo['name'],
-              album: trackInfo['al']['name'],
-              artist: trackInfo['ar'].map(v => v['name']).join('/'),
-              cover: (hasCover) ? savePath + trackId + '.jpg' : null,
-              year: (new Date(parseInt(trackInfo['publishTime']))).getFullYear(),
-              no: `${trackInfo['no']}` || '',
-            }
-
-            if (filetype === 'mp3') {
-              const tags = {
-                title: info.title,
-                album: info.album,
-                artist: info.artist,
-                year: info.year,
-                date: info.year,
-                TRCK: info.no,
-              }
-              if (hasCover) tags.APIC = info.cover
-              logger.debug('MP3 meatadata', tags)
-
-              const result = nodeID3.write(tags, filepath)
-              if (result) {
-                logger.debug('Metadata writed.')
-              } else {
-                logger.warn('Write metadata failed.')
-              }
-            } else {
-              const flac = new Metaflac(filepath)
-
-              flac.setTag('TITLE=' + info.title)
-              flac.setTag('ALBUM=' + info.album)
-              flac.setTag('ARTIST=' + info.artist)
-              flac.setTag('DATE=' + info.year)
-              flac.setTag('YEAR=' + info.year)
-              flac.setTag('TRCK=' + info.no)
-
-              if (hasCover) flac.importPicture(info.cover)
-
-              for (let i = 0; i < 3; i++) flac.save()
-            }
-
-            fs.unlinkSync(info.cover)
-          }
-
-          // Lyric processing
-          {
-            logger.debug('Requesting lyric of track', trackInfo['name'])
-            let result = await fetch(config('api') + `/lyric?id=${trackId}`)
-            result = await result.json()
-
-            if (!result['lrc'] || !result['lrc']['lyric']) {
-              logger.debug('No lyric for track', trackInfo['name'])
-            } else {
-              let lyricModified = []
-
-              lyricModified = lyricModified.concat(that.modifyLyric(result['lrc']['lyric']))
-              if (result['tlyric'] && result['tlyric']['lyric']) 
-                lyricModified = lyricModified.concat(that.modifyLyric(result['tlyric']['lyric'], 1))
-            
-              lyricModified = _.sortBy(lyricModified, ['time', 'type'])
-
-              for (let i in lyricModified) {
-                i = parseInt(i)
-                const lyric = lyricModified[i]
-                if (lyric.type === 0 || i === 0 || lyricModified[i - 1].type === 1
-                || lyricModified[i - 1].time !== lyric.time) continue
-
-                if (config('mergeTranslation', false)) {
-                  lyricModified[i - 1].content += ' - ' + lyric.content
-                } else if (i === (lyricModified.length - 1)) {
-                  if (lyric.content !== '') lyric.time += 100
-                } else {
-                  lyric.time = lyricModified[i + 1].time
-                }
-
-                lyricModified[i] = lyric
-              }
-
-              if (config('mergeTranslation', false)) {
-                _.remove(lyricModified, (v) => {
-                  return v.type === 1
-                })
-              }
-
-              let lyric = []
-              for (const info of lyricModified) {
-                let hour = `${Math.floor(info.time / 60)}`
-                if (hour.length === 1) hour = '0' + hour
-
-                let sec = `${Math.floor(info.time % 60)}`
-                if (sec.length === 1) sec = '0' + sec
-
-                let micsec = `${parseFloat((info.time).toFixed(2))}`
-                micsec = micsec.split('.')[1] || '00'
-                if (micsec.length === 1) micsec = micsec + '0'
-
-                const time = `[${hour}:${sec}.${micsec}]`
-                lyric.push(time + info.content)
-              }
-
-              fs.writeFileSync(savePath + trackId + '.lrc', lyric.join('\n'))
-            }
-          }
-
-          trackList.push(savePath + trackId + '.' + filetype)
-          that.downloadedFormat[trackId] = filetype
-          that.downloaded.add(trackId)
+        playlistList.push({
+          name: playlistInfo.name,
+          trackIds
         })
       }
+    }
 
-      await queue.onIdle()
-      await queue.onEmpty()
+    // Generate for album(专辑)
+    const list = new Set()
+    const extraAlbum = config('extraAlbum', '').split(',')
+    extraAlbum.forEach((item) => list.add(parseInt(item.trim())))
 
-      setTimeout(() => {
-        clearInterval(intervalId)
-      }, 1500)
+    for (const albumId of list) {
+      const albumInfo = await api.getAlbumInfo(albumId)
+      const trackIds = []
+
+      let publishTime = false
+
+      for (const track of albumInfo.songs) {
+        if (publishTime === false) {
+          const trackInfo = await api.getTrackInfo(track.id)
+          publishTime = trackInfo.publishTime
+        }
+
+        trackList[track.id] = metadata.generateTrackMetadata(track, publishTime)
+        trackIds.push(parseInt(track.id))
+      }
+
+      playlistList.push({
+        name: 'Album: ' + albumInfo.album.name,
+        trackIds
+      })
+    }
+
+    logger.info('Download list:')
+    playlistList.forEach((item) => logger.info('  ' + item.name))
+  }
+
+  // Track processing
+  const trackDownloadQueue = new PQueue({ concurrency: config('trackDownloadConcurrency', 3) })
+  for (let trackId in trackList) {
+    trackId = parseInt(trackId)
+    let trackInfo = trackList[trackId]
+    trackDownloadQueue.add(async () => {
+      const savePath = path.resolve(__root, sha1(trackId).substr(0, 2))
+
+      if (that.downloaded.has(trackId)) {
+        logger.info(`Track ${trackId} existed!`)
+        trackList[trackId].done = true
+        trackList[trackId].format = that.downloadedFormat[trackId]
+        return
+      }
+
+      logger.debug('Requesting details of track', trackId)
+
+      if (!trackInfo.title) {
+        trackInfo = metadata.generateTrackMetadata(await api.getTrackInfo(trackId))
+      }
+
+      // Download files
+      let filetype = 'flac'
+      if (!fs.existsSync(savePath)) fs.mkdirSync(savePath, { recursive: true })
+      {
+        logger.debug('Requesting URL of track', trackInfo.title)
+        const trackUrl = await api.getTrackUrl(trackId)
+
+        if (!trackUrl) {
+          logger.info(`Track ${trackInfo.title} is not available due to copyright issue!`)
+          return
+        }
+        if (trackUrl.endsWith('mp3')) filetype = 'mp3'
+
+        logger.info(`[Track: ${trackInfo.title}][Music file] Start downloading...`)
+        await general.downloadFile(trackInfo, trackUrl, savePath)
+
+        if (trackInfo.albumImg) {
+          logger.info(`[Track: ${trackInfo.title}][Cover] Start downloading...`)
+          await general.downloadFile(trackInfo, trackInfo.albumImg + '?param=640y640', savePath)
+        }
+      }
+
+      // Metadata processing
+      {
+        const trackPath = path.resolve(savePath, trackId + '.' + filetype)
+        const coverPath = path.resolve(savePath, trackId + '.jpg')
+
+        metadata.writeMetadata(trackInfo, trackPath, coverPath)
+      }
+
+      // Lyric processing
+      {
+        logger.debug('Requesting lyric of track', trackInfo.name)
+        const lyricData = await api.getLyric(trackId)
+
+        if (!lyricData.lrc || !lyricData.lrc.lyric) {
+          logger.debug('No lyric for track', trackInfo.name)
+        } else {
+          const lyricStr = lyric.generateLyric(trackId, lyricData)
+          fs.writeFileSync(path.resolve(savePath, trackId + '.lrc'), lyricStr)
+        }
+      }
+
+      that.downloaded.add(trackId)
+      trackList[trackId].done = true
+      trackList[trackId].format = filetype
+    })
+  }
+
+  // Generate playlist file
+  const intervalIds = []
+  {
+    const filelist = fs.readdirSync(path.resolve(__root, '../'))
+    for (const name of filelist) {
+      if (name !== 'MUSIC') fs.unlinkSync(path.resolve(__root, '../', name))
     }
   }
-})()
+  for (const playlistInfo of playlistList) {
+    intervalIds.push(setInterval(() => {
+      const playlistPath = path.resolve(__root, '..', general.replaceChar(playlistInfo.name) + '.m3u')
 
+      const trackPathList = []
+
+      for (const trackId of playlistInfo.trackIds) {
+        if (trackList[trackId].done) {
+          const trackFilename = trackId + '.' + trackList[trackId].format
+          const trackPath = path.join('MUSIC', sha1(trackId).substr(0, 2), trackFilename)
+          trackPathList.push(trackPath)
+        }
+      }
+
+      if (trackPathList.length === 0) return
+      const filecontent = '#EXTM3U\n\n' + trackPathList.join('\n')
+      fs.writeFileSync(playlistPath, filecontent)
+    }, 1500))
+  }
+
+  await trackDownloadQueue.onIdle()
+  await trackDownloadQueue.onEmpty()
+
+  setTimeout(() => {
+    intervalIds.forEach((id) => clearInterval(id))
+  }, 2000)
+})()
