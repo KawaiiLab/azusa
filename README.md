@@ -41,39 +41,46 @@
 ## 配置
 
 ```ini
-cm_logLevel = info
 # 日志等级
+cm_logLevel = info
 
-cm_generatePlaylistFile = true
 # 是否为 /MUSIC 目录中的文件夹生成播放列表
+cm_generatePlaylistFile = true
 
-cm_api = http://10.0.0.120:3000
 # NeteaseCloudMusicApi 服务地址
-cm_phone = 13912345678
+cm_api = http://10.0.0.120:3000
 # 网易云手机账号
-cm_password = 123456
+cm_phone = 13912345678
 # 网易云密码
+cm_password = 123456
 
-cm_extraPlaylist = 
 # 附加的歌单 (用,分割)
-cm_excludePlaylist = 
+cm_extraPlaylist = 
 # 排除的歌单 (用,分割)
+cm_excludePlaylist = 
 
-cm_bitRate = 9900000
+# 是否下载收藏的专辑
+cm_downloadSubAlbum = false
+# 附加的专辑 (用,分割)
+cm_extraAlbum = 
+# 排除的专辑 (用,分割)
+cm_excludeAlbum = 
+
 # 下载音质
+cm_bitRate = 999000
 
-cm_mergeTranslation = false
 # 是否将歌词与翻译合并为一行
+cm_mergeTranslation = false
 
-cm_downloadThreads = 4
 # 下载文件的线程数
-cm_playlistConcurrency = 3
+cm_downloadThreads = 4
 # 处理/下载歌曲的并发数
+cm_playlistConcurrency = 3
 ```
 
 ## 食用方法
 
-1.  在 WalkMan 根目录输入 `git clone https://github.com/LoliLin/CloudMan.git -b node`
+1.  在 WalkMan 根目录输入 `git clone https://github.com/isXiaoLin/CloudMan.git -b node`
 2.  进入 `CloudMan` 目录, 输入 `npm i`
 3.  将 `.env.example` 重命名为 `.env` 并按需修改
 4.  输入 `npm start` 即可
