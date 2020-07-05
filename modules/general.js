@@ -47,14 +47,14 @@ module.exports = {
           new MultipartDownload()
             .start(fileURL, {
               numOfConnections: config('downloadThreads', 4),
-              saveDirectory: path.resolve(savePath),
-              fileName: filename
+              writeToBuffer: true
             })
             .on('error', (error) => {
-              logger.warn(`[Track: ${trackInfo.title}][${msg}]`, error)
+              logger.warn(`[Track: ${trackInfo.title}][${msg}] Error while downloading`)
               reject(error)
             })
-            .on('end', () => {
+            .on('end', (buffer) => {
+              fs.writeFileSync(path.resolve(savePath, filename), buffer)
               logger.info(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
               resolve()
             })
