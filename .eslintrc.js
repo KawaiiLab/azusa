@@ -5,7 +5,7 @@ module.exports = {
     es2020: true
   },
   extends: [
-    'eslint:recommended'
+    'standard'
   ],
   parserOptions: {
     ecmaVersion: 11
@@ -22,11 +22,10 @@ module.exports = {
     semi: [
       'error',
       'never'
-    ],
-    'prettier/prettier': 'error'
+    ]
   },
-  'plugins': [
+  plugins: [
     'markdown',
-    'prettier'
+    'standard'
   ]
 }
