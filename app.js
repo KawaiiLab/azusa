@@ -87,8 +87,16 @@ if (config('generatePlaylistFile', true)) {
 
     // Generate for album(专辑)
     const list = new Set()
+    if (config('downloadSubAlbum', false)) {
+      const albumList = await api.getUserAlbum()
+      for (const alist of albumList) list.add(alist.id)
+    }
+
     const extraAlbum = config('extraAlbum', '').split(',')
     extraAlbum.forEach((item) => list.add(parseInt(item.trim())))
+
+    const excludeAlbum = config('excludeAlbum', '').split(',')
+    excludeAlbum.forEach((item) => list.delete(parseInt(item.trim())))
 
     for (const albumId of list) {
       const albumInfo = await api.getAlbumInfo(albumId)

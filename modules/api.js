@@ -25,6 +25,14 @@ module.exports = {
     return result.playlist
   },
 
+  async getUserAlbum () {
+    let result = await fetch(config('api') + '/album/sublist?limit=100')
+    result = await result.json()
+    logger.debug(result)
+
+    return result.data
+  },
+
   async getPlaylistInfo (playlistId) {
     let result = await fetch(config('api') + '/playlist/detail?id=' + playlistId)
     result = await result.json()
