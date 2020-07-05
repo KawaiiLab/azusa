@@ -180,6 +180,7 @@ if (config('generatePlaylistFile', true)) {
       }
 
       // Lyric processing
+      if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
       {
         logger.debug('Requesting lyric of track', trackInfo.name)
         const lyricData = await api.getLyric(trackId)
@@ -193,7 +194,6 @@ if (config('generatePlaylistFile', true)) {
       }
 
       logger.debug(`[Track: ${trackInfo.title}] Start moving...`)
-      if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
       fs.copyFileSync(trackPath, path.resolve(realPath, trackId + '.' + filetype))
       fs.unlinkSync(trackPath)
       logger.debug(`[Track: ${trackInfo.title}] Moved!`)
