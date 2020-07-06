@@ -1,0 +1,31 @@
+# Changelog
+
+## v0.6.1 (06/07/2020)
+- [style(docs): remove changelog](https://github.com/isXiaoLin/CloudMan/commit/f3ce4dbc6d5e1e274cb5d6a63ded9c8e540771c2) - @isXiaoLin
+- [style(docs): beatify](https://github.com/isXiaoLin/CloudMan/commit/1c7811baf55923243f55edab356d6ff593808ef6) - @isXiaoLin
+- [chore(npm): bump to 0.6.1](https://github.com/isXiaoLin/CloudMan/commit/f50eeca13a8e92c1d7b5b4e2a1e15c52ab9e6b60) - @isXiaoLin
+- [chore(env): remove unused settings](https://github.com/isXiaoLin/CloudMan/commit/960e03ac730c5c7c903c7a3801b6777fc28f6bac) - @isXiaoLin
+- [chore(ignore): add dir 'dist'](https://github.com/isXiaoLin/CloudMan/commit/3e52950f036e5a9b03ef8f70cbe72ff2b89648d4) - @isXiaoLin
+- [style(prettier): remove](https://github.com/isXiaoLin/CloudMan/commit/c3c0230f61ec15fc86c0aa4bdffcb235e2115c50) - @isXiaoLin
+- [style(Codacy): provice base to parseInt](https://github.com/isXiaoLin/CloudMan/commit/1bfb574004e083a4114dc2cbc5a3d00f2ddb3bcf) - @isXiaoLin
+- [feat(metadata): add disc no in metadata](https://github.com/isXiaoLin/CloudMan/commit/f608bcf27dd87acb564f0396e73a4b12b50da78f) - @isXiaoLin
+- [fix(metadata): FLAC 'TRAC' to 'TRACKNUMBER'](https://github.com/isXiaoLin/CloudMan/commit/5197d87f5dfcb0f4ba406cf5183118a0aae52690) - @isXiaoLin
+- [fix(download): remove multipart downloader](https://github.com/isXiaoLin/CloudMan/commit/436060d5d4909afcb2f8218d33dce4c89d2b2072) - @isXiaoLin
+- [feat(progress): add progress bar](https://github.com/isXiaoLin/CloudMan/commit/4df25fec914cd99c06e9da52d98b3270dfce7890) - @isXiaoLin
+- [fix(io): dir not found](https://github.com/isXiaoLin/CloudMan/commit/99721d03b259d84b57846c181d2ddf2cbdbcde73) - @isXiaoLin
+- [fix(io): optimize io opreations](https://github.com/isXiaoLin/CloudMan/commit/be6e30ea0d5c49f253cc6b95396c149a25bef751) - @isXiaoLin
+- [fix(download): download to buffer](https://github.com/isXiaoLin/CloudMan/commit/44e008caa821e0efa410bf948082932225ffd59c) - @isXiaoLin
+- [chore(deps): bump MultipartDownload to 1.2.4](https://github.com/isXiaoLin/CloudMan/commit/53a0f9e248c1536acde4393c25d9ad1b5fd82d9e) - @isXiaoLin
+- [docs(config): support downloading album](https://github.com/isXiaoLin/CloudMan/commit/22ac3c85f1f643d00a86fc1a001498a0698e2c14) - @isXiaoLin
+- [feat(album): support downloading album](https://github.com/isXiaoLin/CloudMan/commit/5ea29329a3ebc1bb9e977aab8c056a806b2ff0d6) - @isXiaoLin
+- [style(standard): move to standard](https://github.com/isXiaoLin/CloudMan/commit/6738ff239e6c331a2fbfc85210b98a9bf0dfdeaa) - @isXiaoLin
+- [feat(album): support downloading album](https://github.com/isXiaoLin/CloudMan/commit/f49d8b8af693bb5d12726663cc0756ed6b3536ce) - @isXiaoLin
+- [feat(core): modularize](https://github.com/isXiaoLin/CloudMan/commit/ba4335f5e45c0f00609659310704a7e12b1326a7) - @isXiaoLin
+- [style: beatify](https://github.com/isXiaoLin/CloudMan/commit/6d080dff97c94b772914bddfbe400558c35e87fe) - @isXiaoLin
+- [style: beatify](https://github.com/isXiaoLin/CloudMan/commit/d8d79045f2db7cbf60323fd97acec5644e5792fc) - @isXiaoLin
+- [docs: update doc](https://github.com/isXiaoLin/CloudMan/commit/ff21ccfa3b3ec42a39bb74abfd2832d5203a9249) - @isXiaoLin
+- [feat: support merge translation ( #1 )](https://github.com/isXiaoLin/CloudMan/commit/71e6b73ad44f5aa8c1f613ef7d28c6fbe168315b) - @isXiaoLin
+- [feat: generate playlist for local directory](https://github.com/isXiaoLin/CloudMan/commit/89b03b1d235a7a547a1753fd8151c2b460fa4a13) - @isXiaoLin
+- [feat: node version](https://github.com/isXiaoLin/CloudMan/commit/c691b42a8d0126f49565d758b47638ae9d3bff34) - @isXiaoLin
+- [str: remove python version](https://github.com/isXiaoLin/CloudMan/commit/beda3fe467a31993036df56ac8fb1edcd214126c) - @isXiaoLin
+- [docs: update docs](https://github.com/isXiaoLin/CloudMan/commit/8207aaea25c2da4d30fe34981b93dacbf5622e02) - @isXiaoLin

@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan) [![Automated Release Notes by gren](https://img.shields.io/badge/%F0%9F%A4%96-release%20notes-00B2EE.svg)](https://github.com/isXiaoLin/CloudMan/blob/node/CHANGELOG.md)
 
 ## 简介
 
@@ -83,11 +83,14 @@ cm_playlistConcurrency = 3
 3.  将 `.env.example` 重命名为 `.env` 并按需修改
 4.  输入 `npm start` 即可
 
-下载线程数建议设置为 4 及 4 以下, 若超过 4 疑似会被强制断开
-
 ## 运行方式
 
 程序运行时自动在根目录的 `/MUSIC` 中生成 `CloudMan` 文件夹, 该文件夹中 `MUSIC` 文件夹用于存放歌曲文件及歌词文件, 父目录用于存放播放列表文件
 
 所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
 
+## Author
+
+**CloudMan** © [XiaoLin](https://github.com/isXiaoLin), Released under the [MIT](./LICENSE) License.<br>
+
+> Blog [@xiaolin](https://www.xiaolin.in) · GitHub [@isXiaoLin](https://github.com/isXiaoLin) · Twitter [@isXiaoLin](https://twitter.com/isXiaoLin)
