@@ -13,6 +13,7 @@ module.exports = {
       album: '',
       albumImg: null,
       albumNo: null,
+      discNo: null,
       title: '',
       year: null
     }
@@ -21,6 +22,7 @@ module.exports = {
     metadata.album = data.al.name
     metadata.albumImg = data.al.picUrl || null
     metadata.albumNo = data.no
+    metadata.discNo = data.cd
     if (data.publishTime || publishTime) {
       metadata.year = (new Date(parseInt(data.publishTime || publishTime))).getFullYear()
     }
@@ -40,7 +42,8 @@ module.exports = {
         artist: trackInfo.artist,
         year: trackInfo.year,
         date: trackInfo.year,
-        TRCK: trackInfo.albumNo
+        TRCK: trackInfo.albumNo,
+        MCDI: trackInfo.discNo
       }
       if (trackInfo.albumImg) tags.APIC = path.resolve(coverPath)
 
@@ -60,6 +63,7 @@ module.exports = {
       flac.setTag('DATE=' + trackInfo.year)
       flac.setTag('YEAR=' + trackInfo.year)
       flac.setTag('TRACKNUMBER=' + trackInfo.albumNo)
+      flac.setTag('DISCNUMBER=' + trackInfo.discNo)
 
       if (trackInfo.albumImg) flac.importPicture(coverPath)
 
