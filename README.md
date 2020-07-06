@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-v0.6-yellow.svg) ![Last Commit](https://img.shields.io/github/last-commit/LoliLin/CloudMan.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/LoliLin/CloudMan?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LoliLin/CloudMan&amp;utm_campaign=Badge_Grade)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan)
 
 ## 简介
 
@@ -17,26 +17,26 @@
 
 ## Features / TODOs
 
-  - [x] 下载用户歌单
-  - [x] 填充音乐元数据
-  - [x] 下载并格式化歌词及翻译
-  - [x] 允许排除 / 附加歌单
-  - [x] 为本地文件夹生成列表
-  - [x] 登陆后下载无损格式音乐
-  - [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
-  - [x] 多线程下载
-  - [x] 下载错误自动重试
-  - [x] 处理云端歌单变动
-  - [x] 合并歌词原文与翻译
-  - [ ] 处理播放器端列表变动
-  - [ ] 指定为某几个歌单生成组合列表
+- [x] 下载用户歌单
+- [x] 填充音乐元数据
+- [x] 下载并格式化歌词及翻译
+- [x] 允许排除 / 附加歌单
+- [x] 为本地文件夹生成列表
+- [x] 登陆后下载无损格式音乐
+- [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
+- [x] 多线程下载
+- [x] 下载错误自动重试
+- [x] 处理云端歌单变动
+- [x] 合并歌词原文与翻译
+- [ ] 处理播放器端列表变动
+- [ ] 指定为某几个歌单生成组合列表
 
 ## 依赖
 
-  - Node.js 10+
-  - [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
-    - 本项目现使用所有 API 均依赖于此项目
-    - 推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
+- Node.js 10+
+- [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
+  - 本项目现使用所有 API 均依赖于此项目
+  - 推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
 
 ## 配置
 
@@ -72,8 +72,6 @@ cm_bitRate = 999000
 # 是否将歌词与翻译合并为一行
 cm_mergeTranslation = false
 
-# 下载文件的线程数
-cm_downloadThreads = 4
 # 处理/下载歌曲的并发数
 cm_playlistConcurrency = 3
 ```
