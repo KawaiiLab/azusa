@@ -1,10 +1,8 @@
 const fs = require('fs')
 const path = require('path')
-const fetch = require('./fetch')
 const pRetry = require('p-retry')
 const logger = require('./logger')
-const config = require('./config')
-const MultipartDownload = require('multipart-download')
+const { DownloaderHelper } = require('node-downloader-helper')
 
 module.exports = {
   replaceChar (str) {
@@ -26,45 +24,31 @@ module.exports = {
 
     return pRetry(async () => {
       return await new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), (isPhoto) ? 5000 : 20000)
+        setTimeout(() => reject(new Error('Timeout')), (isPhoto) ? 8000 : 30000)
 
-        if (isPhoto) {
-          fetch(fileURL).then((res) => {
-            const fileStream = fs.createWriteStream(path.resolve(savePath, filename))
-            res.body.pipe(fileStream)
+        const dl = new DownloaderHelper(fileURL, path.resolve(savePath), {
+          override: true,
+          fileName: filename
+        })
 
-            res.body.on('error', (error) => {
-              logger.warn(`[Track: ${trackInfo.title}][${msg}]`, error)
-              reject(error)
-            })
+        dl.on('error', async (error) => {
+          await dl.stop()
+          logger.warn(`[Track: ${trackInfo.title}][${msg}]`, error)
+          reject(error)
+        }).on('timeout', async () => {
+          await dl.stop()
+        }).on('end', () => {
+          logger.debug(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
+          resolve()
+        })
 
-            fileStream.on('finish', () => {
-              logger.debug(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
-              resolve()
-            })
-          })
-        } else {
-          new MultipartDownload()
-            .start(fileURL, {
-              numOfConnections: config('downloadThreads', 4),
-              writeToBuffer: true
-            })
-            .on('error', (error) => {
-              logger.warn(`[Track: ${trackInfo.title}][${msg}] Error while downloading`)
-              reject(error)
-            })
-            .on('end', (buffer) => {
-              fs.writeFileSync(path.resolve(savePath, filename), buffer)
-              logger.debug(`[Track: ${trackInfo.title}][${msg}] Download completed!`)
-              resolve()
-            })
-        }
+        dl.start()
       })
     }, {
       retries: 3,
       onFailedAttempt: (error) => {
         logger.error(error)
-        logger.warn(`[Track: ${trackInfo.title}][${msg}] Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+        logger.warn(`[Track: ${trackInfo.title}][${msg}] ${error.attemptNumber} times failed. ${error.retriesLeft} times left.`)
       }
     })
   },
