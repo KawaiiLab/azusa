@@ -91,8 +91,3 @@ cm_playlistConcurrency = 3
 
 所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
 
-## 更新日志
-
-### v0.6
-
-Node.js 第一版
