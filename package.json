@@ -1,11 +1,11 @@
 {
   "name": "cloudman",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "npm start"
+    "build": "./node_modules/.bin/pkg --out-path dist app.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "eslint": "^7.3.1",
     "eslint-plugin-markdown": "^1.0.2",
+    "pkg": "^4.4.9",
     "standard": "^14.3.4"
   }
 }
