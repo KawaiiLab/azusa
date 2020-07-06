@@ -59,7 +59,7 @@ module.exports = {
       flac.setTag('ARTIST=' + trackInfo.artist)
       flac.setTag('DATE=' + trackInfo.year)
       flac.setTag('YEAR=' + trackInfo.year)
-      flac.setTag('TRCK=' + trackInfo.albumNo)
+      flac.setTag('TRACKNUMBER=' + trackInfo.albumNo)
 
       if (trackInfo.albumImg) flac.importPicture(coverPath)
 
