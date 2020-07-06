@@ -11,7 +11,7 @@ module.exports = {
       const result = regex.exec(line)
       if (!result) continue
       modified.push({
-        time: parseInt(result[1]) * 60 + parseInt(result[2]) + parseFloat('0.' + result[3]),
+        time: parseInt(result[1]) * 60 + parseInt(result[2], 10) + parseFloat('0.' + result[3], 10),
         type,
         content: line.replace(regex, '').trim()
       })
@@ -31,7 +31,7 @@ module.exports = {
     lyricModified = _.sortBy(lyricModified, ['time', 'type'])
 
     for (let i in lyricModified) {
-      i = parseInt(i)
+      i = parseInt(i, 10)
       const lyric = lyricModified[i]
       if (lyric.type === 0 || i === 0 || lyricModified[i - 1].type === 1 ||
               lyricModified[i - 1].time !== lyric.time) continue

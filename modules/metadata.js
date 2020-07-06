@@ -24,7 +24,7 @@ module.exports = {
     metadata.albumNo = data.no
     metadata.discNo = data.cd
     if (data.publishTime || publishTime) {
-      metadata.year = (new Date(parseInt(data.publishTime || publishTime))).getFullYear()
+      metadata.year = (new Date(parseInt(data.publishTime || publishTime, 10))).getFullYear()
     }
 
     metadata.title = data.name

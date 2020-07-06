@@ -39,7 +39,7 @@ if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
     const filelist = fs.readdirSync(path.resolve(__root, dirname))
     for (const filename of filelist) {
       if (filename.startsWith('._')) continue
-      const trackId = parseInt(filename.split('.')[0])
+      const trackId = parseInt(filename.split('.')[0], 10)
       if (filename.endsWith('.lrc')) that.downloaded.add(trackId)
       if (filename.endsWith('.mp3')) that.downloadedFormat[trackId] = 'mp3'
       else if (filename.endsWith('.flac')) that.downloadedFormat[trackId] = 'flac'
@@ -69,17 +69,17 @@ if (config('generatePlaylistFile', true)) {
       for (const plist of playlist) list.add(plist.id)
 
       const extraPlaylist = config('extraPlaylist', '').split(',')
-      extraPlaylist.forEach((item) => list.add(parseInt(item.trim())))
+      extraPlaylist.forEach((item) => list.add(parseInt(item.trim(), 10)))
 
       const excludePlaylist = config('excludePlaylist', '').split(',')
-      excludePlaylist.forEach((item) => list.delete(parseInt(item.trim())))
+      excludePlaylist.forEach((item) => list.delete(parseInt(item.trim(), 10)))
 
       for (const playlistId of list) {
         const playlistInfo = await api.getPlaylistInfo(playlistId)
         const trackIds = []
         for (const track of playlistInfo.trackIds) {
           trackList[track.id] = {}
-          trackIds.push(parseInt(track.id))
+          trackIds.push(parseInt(track.id, 10))
         }
 
         playlistList.push({
@@ -97,10 +97,10 @@ if (config('generatePlaylistFile', true)) {
     }
 
     const extraAlbum = config('extraAlbum', '').split(',')
-    extraAlbum.forEach((item) => list.add(parseInt(item.trim())))
+    extraAlbum.forEach((item) => list.add(parseInt(item.trim(), 10)))
 
     const excludeAlbum = config('excludeAlbum', '').split(',')
-    excludeAlbum.forEach((item) => list.delete(parseInt(item.trim())))
+    excludeAlbum.forEach((item) => list.delete(parseInt(item.trim(), 10)))
 
     for (const albumId of list) {
       const albumInfo = await api.getAlbumInfo(albumId)
@@ -115,7 +115,7 @@ if (config('generatePlaylistFile', true)) {
         }
 
         trackList[track.id] = metadata.generateTrackMetadata(track, publishTime)
-        trackIds.push(parseInt(track.id))
+        trackIds.push(parseInt(track.id, 10))
       }
 
       playlistList.push({
@@ -132,7 +132,7 @@ if (config('generatePlaylistFile', true)) {
   // Track processing
   const trackDownloadQueue = new PQueue({ concurrency: config('trackDownloadConcurrency', 3) })
   for (let trackId in trackList) {
-    trackId = parseInt(trackId)
+    trackId = parseInt(trackId, 10)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
       logger._bar.tick(1)
