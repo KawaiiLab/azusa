@@ -4,6 +4,8 @@ const os = require('os')
 const fs = require('fs')
 const sha1 = require('sha1')
 const path = require('path')
+const colors = require('colors')
+const hasher = require('node-object-hash')()
 const { default: PQueue } = require('p-queue')
 
 const api = require('./modules/api')
@@ -31,6 +33,7 @@ if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
 
 // Get downloaded list
 {
+  logger.info('Getting downloaded tracks...')
   const dirlist = fs.readdirSync(__root)
   for (const dirname of dirlist) {
     const filelist = fs.readdirSync(path.resolve(__root, dirname))
@@ -116,13 +119,14 @@ if (config('generatePlaylistFile', true)) {
       }
 
       playlistList.push({
-        name: 'Album: ' + albumInfo.album.name,
+        name: '[Album] ' + albumInfo.album.name,
         trackIds
       })
     }
 
     logger.info('Download list:')
     playlistList.forEach((item) => logger.info('  ' + item.name))
+    logger.initBar(Object.keys(trackList).length)
   }
 
   // Track processing
@@ -131,6 +135,7 @@ if (config('generatePlaylistFile', true)) {
     trackId = parseInt(trackId)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
+      logger._bar.tick(1)
       const tmpPath = os.tmpdir()
       const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
       const savePath = path.resolve(tmpPath, 'CloudMan/', sha1(trackId).substr(0, 2))
@@ -147,7 +152,7 @@ if (config('generatePlaylistFile', true)) {
       if (!trackInfo.title) {
         trackInfo = metadata.generateTrackMetadata(await api.getTrackInfo(trackId))
       }
-      logger.info(`[Track: ${trackInfo.title}] Start processing...`)
+      logger.info(`[Track: ${trackInfo.title}] Start ${colors.yellow('processing')}...`)
 
       // Download files
       let filetype = 'flac'
@@ -201,7 +206,7 @@ if (config('generatePlaylistFile', true)) {
       that.downloaded.add(trackId)
       trackList[trackId].done = true
       trackList[trackId].format = filetype
-      logger.info(`[Track: ${trackInfo.title}] Success!`)
+      logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success')}!`)
     })
   }
 
@@ -214,6 +219,7 @@ if (config('generatePlaylistFile', true)) {
     }
   }
   for (const playlistInfo of playlistList) {
+    let objHash = null
     intervalIds.push(setInterval(() => {
       const playlistPath = path.resolve(__root, '..', general.replaceChar(playlistInfo.name) + '.m3u')
 
@@ -228,8 +234,10 @@ if (config('generatePlaylistFile', true)) {
       }
 
       if (trackPathList.length === 0) return
-      const filecontent = '#EXTM3U\n\n' + trackPathList.join('\n')
-      fs.writeFileSync(playlistPath, filecontent)
+      if (objHash !== (objHash = hasher.hash(trackPathList))) {
+        const filecontent = '#EXTM3U\n\n' + trackPathList.join('\n')
+        fs.writeFileSync(playlistPath, filecontent)
+      }
     }, 1500))
   }
 
