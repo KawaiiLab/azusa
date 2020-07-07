@@ -36,7 +36,7 @@ const generatePrefix = (level = 'info') => {
   }
 
   return [
-    colors.gray(`[${(new Date()).toISOString()}]`),
+    `[${(new Date()).toISOString()}]`.dim,
     colors[color](`[${level.toUpperCase()}]`)
   ]
 }

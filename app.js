@@ -131,11 +131,11 @@ if (config('generatePlaylistFile', true)) {
 
   // Track processing
   const trackDownloadQueue = new PQueue({ concurrency: config('trackDownloadConcurrency', 3) })
+  const trackCopyQueue = new PQueue({ concurrency: 1 })
   for (let trackId in trackList) {
     trackId = parseInt(trackId, 10)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
-      logger._bar.tick(1)
       const tmpPath = os.tmpdir()
       const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
       const savePath = path.resolve(tmpPath, 'CloudMan/', sha1(trackId).substr(0, 2))
@@ -144,6 +144,7 @@ if (config('generatePlaylistFile', true)) {
         logger.info(`Track ${trackId} existed!`)
         trackList[trackId].done = true
         trackList[trackId].format = that.downloadedFormat[trackId]
+        logger._bar.tick(1)
         return
       }
 
@@ -152,7 +153,7 @@ if (config('generatePlaylistFile', true)) {
       if (!trackInfo.title) {
         trackInfo = metadata.generateTrackMetadata(await api.getTrackInfo(trackId))
       }
-      logger.info(`[Track: ${trackInfo.title}] Start ${colors.yellow('processing')}...`)
+      logger.info(`[Track: ${trackInfo.title}] ${colors.yellow('Start downloading...')}`)
 
       // Download files
       let filetype = 'flac'
@@ -162,7 +163,8 @@ if (config('generatePlaylistFile', true)) {
         const trackUrl = await api.getTrackUrl(trackId)
 
         if (!trackUrl) {
-          logger.info(`Track ${trackInfo.title} is not available due to copyright issue!`)
+          logger.info(`[Track: ${trackInfo.title}] ${colors.red('Not available')} due to copyright issue!`)
+          logger._bar.tick(1)
           return
         }
         if (trackUrl.endsWith('mp3')) filetype = 'mp3'
@@ -175,38 +177,42 @@ if (config('generatePlaylistFile', true)) {
           await general.downloadFile(trackInfo, trackInfo.albumImg + '?param=640y640', savePath)
         }
       }
+      logger.info(`[Track: ${trackInfo.title}] ${colors.green('Downloaded!')}`)
 
-      // Metadata processing
-      const trackPath = path.resolve(savePath, trackId + '.' + filetype)
-      {
-        const coverPath = path.resolve(savePath, trackId + '.jpg')
+      trackCopyQueue.add(async () => {
+        logger.info(`[Track: ${trackInfo.title}] ${colors.yellow('Start processing...')}`)
+        // Metadata processing
+        const trackPath = path.resolve(savePath, trackId + '.' + filetype)
+        {
+          const coverPath = path.resolve(savePath, trackId + '.jpg')
 
-        metadata.writeMetadata(trackInfo, trackPath, coverPath)
-      }
-
-      // Lyric processing
-      if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
-      {
-        logger.debug('Requesting lyric of track', trackInfo.name)
-        const lyricData = await api.getLyric(trackId)
-
-        if (!lyricData.lrc || !lyricData.lrc.lyric) {
-          logger.debug('No lyric for track', trackInfo.name)
-        } else {
-          const lyricStr = lyric.generateLyric(trackId, lyricData)
-          fs.writeFileSync(path.resolve(realPath, trackId + '.lrc'), lyricStr)
+          metadata.writeMetadata(trackInfo, trackPath, coverPath)
         }
-      }
 
-      logger.debug(`[Track: ${trackInfo.title}] Start moving...`)
-      fs.copyFileSync(trackPath, path.resolve(realPath, trackId + '.' + filetype))
-      fs.unlinkSync(trackPath)
-      logger.debug(`[Track: ${trackInfo.title}] Moved!`)
+        // Lyric processing
+        if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
+        {
+          logger.debug('Requesting lyric of track', trackInfo.name)
+          const lyricData = await api.getLyric(trackId)
 
-      that.downloaded.add(trackId)
-      trackList[trackId].done = true
-      trackList[trackId].format = filetype
-      logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success')}!`)
+          if (!lyricData.lrc || !lyricData.lrc.lyric) {
+            logger.debug('No lyric for track', trackInfo.name)
+          } else {
+            const lyricStr = lyric.generateLyric(trackId, lyricData)
+            fs.writeFileSync(path.resolve(realPath, trackId + '.lrc'), lyricStr)
+          }
+        }
+
+        fs.copyFileSync(trackPath, path.resolve(realPath, trackId + '.' + filetype))
+        fs.unlinkSync(trackPath)
+        logger.debug(`[Track: ${trackInfo.title}] Moved!`)
+
+        that.downloaded.add(trackId)
+        trackList[trackId].done = true
+        trackList[trackId].format = filetype
+        logger._bar.tick(1)
+        logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success!')}`)
+      })
     })
   }
 

@@ -24,7 +24,7 @@ module.exports = {
 
     return pRetry(async () => {
       return await new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), (isPhoto) ? 8000 : 30000)
+        setTimeout(() => reject(new Error('Timeout')), (isPhoto) ? 10000 : 60000)
 
         const dl = new DownloaderHelper(fileURL, path.resolve(savePath), {
           override: true,
