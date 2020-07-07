@@ -35,8 +35,7 @@
 
 - Node.js 10+
 - [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
-  - 本项目现使用所有 API 均依赖于此项目
-  - 推荐使用 Docker 安装: `docker run -d -p 3000:3000 binaryify/netease_cloud_music_api`
+  - 公共服务: `https://cm.api.xiaolin.in`
 
 ## 配置
 
@@ -48,7 +47,7 @@ cm_logLevel = info
 cm_generatePlaylistFile = true
 
 # NeteaseCloudMusicApi 服务地址
-cm_api = http://10.0.0.120:3000
+cm_api = https://cm.api.xiaolin.in
 # 网易云手机账号
 cm_phone = 13912345678
 # 网易云密码
