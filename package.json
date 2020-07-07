@@ -1,6 +1,6 @@
 {
   "name": "cloudman",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
@@ -36,6 +36,7 @@
     "p-retry": "^4.2.0",
     "path": "^0.12.7",
     "progress": "^2.0.3",
+    "random-int": "^2.0.1",
     "sha1": "^1.1.1"
   },
   "devDependencies": {

@@ -70,6 +70,8 @@ module.exports = {
       flac.save()
     }
 
-    fs.unlinkSync(coverPath)
+    fs.unlink(coverPath, (error) => {
+      if (error) throw error
+    })
   }
 }

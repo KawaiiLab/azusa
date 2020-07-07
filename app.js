@@ -5,6 +5,7 @@ const fs = require('fs')
 const sha1 = require('sha1')
 const path = require('path')
 const colors = require('colors')
+const randomInt = require('random-int')
 const hasher = require('node-object-hash')()
 const { default: PQueue } = require('p-queue')
 
@@ -157,7 +158,18 @@ if (config('generatePlaylistFile', true)) {
 
       // Download files
       let filetype = 'flac'
-      if (!fs.existsSync(savePath)) fs.mkdirSync(savePath, { recursive: true })
+      await new Promise((resolve) => {
+        fs.access(savePath, fs.constants.F_OK | fs.constants.W_OK, (error) => {
+          if (error) {
+            fs.mkdir(savePath, {
+              recursive: true
+            }, () => {
+              resolve()
+            })
+          } else resolve()
+        })
+      })
+
       {
         logger.debug('Requesting URL of track', trackInfo.title)
         const trackUrl = await api.getTrackUrl(trackId)
@@ -190,7 +202,17 @@ if (config('generatePlaylistFile', true)) {
         }
 
         // Lyric processing
-        if (!fs.existsSync(realPath)) fs.mkdirSync(realPath, { recursive: true })
+        await new Promise((resolve) => {
+          fs.access(realPath, fs.constants.F_OK | fs.constants.W_OK, (error) => {
+            if (error) {
+              fs.mkdir(realPath, {
+                recursive: true
+              }, () => {
+                resolve()
+              })
+            } else resolve()
+          })
+        })
         {
           logger.debug('Requesting lyric of track', trackInfo.name)
           const lyricData = await api.getLyric(trackId)
@@ -199,19 +221,34 @@ if (config('generatePlaylistFile', true)) {
             logger.debug('No lyric for track', trackInfo.name)
           } else {
             const lyricStr = lyric.generateLyric(trackId, lyricData)
-            fs.writeFileSync(path.resolve(realPath, trackId + '.lrc'), lyricStr)
+            await new Promise((resolve) => {
+              fs.writeFile(path.resolve(realPath, trackId + '.lrc'), lyricStr, (error) => {
+                if (error) throw error
+                resolve()
+              })
+            })
           }
         }
 
-        fs.copyFileSync(trackPath, path.resolve(realPath, trackId + '.' + filetype))
-        fs.unlinkSync(trackPath)
-        logger.debug(`[Track: ${trackInfo.title}] Moved!`)
+        logger.debug(`[Track: ${trackInfo.title}] Moving...`)
 
-        that.downloaded.add(trackId)
-        trackList[trackId].done = true
-        trackList[trackId].format = filetype
-        logger._bar.tick(1)
-        logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success!')}`)
+        return new Promise((resolve) => {
+          fs.copyFile(trackPath, path.resolve(realPath, trackId + '.' + filetype), (error) => {
+            if (error) throw error
+
+            fs.unlink(trackPath, () => {
+              logger.debug(`[Track: ${trackInfo.title}] Moved!`)
+
+              that.downloaded.add(trackId)
+              trackList[trackId].done = true
+              trackList[trackId].format = filetype
+              logger._bar.tick(1)
+              logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success!')}`)
+
+              resolve()
+            })
+          })
+        })
       })
     })
   }
@@ -242,15 +279,21 @@ if (config('generatePlaylistFile', true)) {
       if (trackPathList.length === 0) return
       if (objHash !== (objHash = hasher.hash(trackPathList))) {
         const filecontent = '#EXTM3U\n\n' + trackPathList.join('\n')
-        fs.writeFileSync(playlistPath, filecontent)
+        setTimeout(() => {
+          fs.writeFile(playlistPath, filecontent, (error) => {
+            if (error) throw error
+          })
+        }, randomInt(1, 1000))
       }
-    }, 1500))
+    }, 5000))
   }
 
   await trackDownloadQueue.onIdle()
   await trackDownloadQueue.onEmpty()
+  await trackCopyQueue.onIdle()
+  await trackCopyQueue.onEmpty()
 
   setTimeout(() => {
     intervalIds.forEach((id) => clearInterval(id))
-  }, 2000)
+  }, 8000)
 })()
