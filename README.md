@@ -88,6 +88,14 @@ cm_playlistConcurrency = 3
 
 所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
 
+## SensMe 及 Music Center for PC
+
+这几天试用了一下 Sony 官方的 Music Center for PC, 发现其实还算好用，尤其是元数据补充得非常齐并且准确率也很高 (这也太高了吧 (碎碎念
+
+这个项目是用网易云得数据所以没法比得嘛 (自我安慰
+
+但是依然是可以进行 SensMe 分析的！只用打开 Music Center for PC，在`文件->导入文件夹`中选择 WALKMAN-SD 中的`MUSIC/CloudMan`文件夹，然后全选右键点击`获取未知元素`就可以啦！
+
 ## Author
 
 **CloudMan** © [XiaoLin](https://github.com/isXiaoLin), Released under the [MIT](./LICENSE) License.<br>
