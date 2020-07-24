@@ -25,7 +25,7 @@
     "dotenv": "^8.2.0",
     "fetch-cookie": "^0.10.1",
     "fs": "0.0.1-security",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "metaflac-js2": "^1.0.7",
     "node-downloader-helper": "^1.0.13",
     "node-fetch": "^2.6.0",
