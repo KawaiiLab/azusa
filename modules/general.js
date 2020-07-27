@@ -68,10 +68,15 @@ module.exports = {
       for (const audioFile of filelist) {
         if (!audioFile.startsWith('._') &&
       (audioFile.endsWith('mp3') ||
+        audioFile.endsWith('wma') ||
         audioFile.endsWith('flac') ||
-        audioFile.endsWith('pcm') ||
         audioFile.endsWith('wav') ||
-        audioFile.endsWith('aac'))) audioList.push(dirn + '/' + audioFile)
+        audioFile.endsWith('mp4') ||
+        audioFile.endsWith('m4a') ||
+        audioFile.endsWith('aif') ||
+        audioFile.endsWith('dsf') ||
+        audioFile.endsWith('dff') ||
+        audioFile.endsWith('ape'))) audioList.push(dirn + '/' + audioFile)
       }
       fs.writeFileSync(path.resolve(dirname, dirn + '.m3u'), '#EXTM3U\n\n' + audioList.join('\n'))
     }
