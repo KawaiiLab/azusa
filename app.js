@@ -5,6 +5,7 @@ const fs = require('fs')
 const sha1 = require('sha1')
 const path = require('path')
 const colors = require('colors')
+const rimraf = require('rimraf')
 const randomInt = require('random-int')
 const hasher = require('node-object-hash')()
 const { default: PQueue } = require('p-queue')
@@ -20,6 +21,9 @@ const that = {
   downloaded: new Set(),
   downloadedFormat: {}
 }
+
+const uuid = require('uuid').v4
+const tmpBasePath = path.resolve(os.tmpdir(), 'CloudMan/')
 
 let __root = ''
 
@@ -54,6 +58,15 @@ if (config('generatePlaylistFile', true)) {
 }
 
 (async () => {
+  await new Promise((resolve, reject) => {
+    if (fs.existsSync(tmpBasePath)) {
+      rimraf(tmpBasePath, (error) => {
+        if (error) reject(error)
+        else resolve()
+      })
+    }
+  })
+
   // Login to Cloudmusic
   logger.info('Logging in to Cloudmusic')
   await api.login(config('phone'), config('password'))
@@ -137,9 +150,9 @@ if (config('generatePlaylistFile', true)) {
     trackId = parseInt(trackId, 10)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
-      const tmpPath = os.tmpdir()
+      const tmpPath = path.resolve(tmpBasePath, uuid() + '/')
       const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
-      const savePath = path.resolve(tmpPath, 'CloudMan/', sha1(trackId).substr(0, 2))
+      const savePath = tmpPath
 
       if (that.downloaded.has(trackId)) {
         logger.info(`Track ${trackId} existed!`)
@@ -296,4 +309,5 @@ if (config('generatePlaylistFile', true)) {
   setTimeout(() => {
     intervalIds.forEach((id) => clearInterval(id))
   }, 8000)
+  rimraf(tmpBasePath)
 })()

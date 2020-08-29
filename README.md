@@ -3,7 +3,7 @@
 
 🎆for and by Music Lovers
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan) [![Automated Release Notes by gren](https://img.shields.io/badge/%F0%9F%A4%96-release%20notes-00B2EE.svg)](https://github.com/isXiaoLin/CloudMan/blob/node/CHANGELOG.md)
+![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan) [![CHANGELOG](https://img.shields.io/badge/%F0%9F%A4%96-release%20notes-00B2EE.svg)](https://github.com/isXiaoLin/CloudMan/blob/node/CHANGELOG.md)
 
 ## 简介
 

@@ -1,11 +1,12 @@
 {
   "name": "cloudman",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "build": "./node_modules/.bin/pkg --out-path dist app.js"
+    "build": "./node_modules/.bin/pkg -t node14-linux,node14-macos,node14-win --out-path dist app.js",
+    "version": "auto-changelog -p -l false --hide-credit --ignore-commit-pattern docs"
   },
   "repository": {
     "type": "git",
@@ -37,7 +38,9 @@
     "path": "^0.12.7",
     "progress": "^2.0.3",
     "random-int": "^2.0.1",
-    "sha1": "^1.1.1"
+    "rimraf": "^3.0.2",
+    "sha1": "^1.1.1",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "eslint": "^7.3.1",
