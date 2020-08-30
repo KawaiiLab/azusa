@@ -309,5 +309,5 @@ if (config('generatePlaylistFile', true)) {
   setTimeout(() => {
     intervalIds.forEach((id) => clearInterval(id))
   }, 8000)
-  rimraf(tmpBasePath)
+  rimraf(tmpBasePath, () => {})
 })()
