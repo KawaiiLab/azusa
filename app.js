@@ -64,7 +64,7 @@ if (config('generatePlaylistFile', true)) {
         if (error) reject(error)
         else resolve()
       })
-    }
+    } else resolve()
   })
 
   // Login to Cloudmusic
