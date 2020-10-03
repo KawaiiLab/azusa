@@ -147,6 +147,19 @@ if (config('generatePlaylistFile', true)) {
       } else unfoundTrackList[trackId] = trackList[trackId]
     }
 
+    for (const trackId of that.downloaded) {
+      if (!trackList[trackId]) {
+        const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
+        fs.unlink(path.join(realPath, trackId + '.lrc'), () => {
+          fs.unlink(path.join(realPath, trackId + '.flac'), (error) => {
+            if (error) {
+              fs.unlink(path.join(realPath, trackId + '.mp3'), () => {})
+            }
+          })
+        })
+      }
+    }
+
     logger.info('Download list:')
     playlistList.forEach((item) => logger.info('  ' + item.name))
     logger.initBar(Object.keys(unfoundTrackList).length)
