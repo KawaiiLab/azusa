@@ -109,13 +109,13 @@ if (config('generatePlaylistFile', true)) {
     if (config('downloadSubAlbum', false)) {
       const albumList = await api.getUserAlbum()
       for (const alist of albumList) list.add(alist.id)
+
+      const extraAlbum = config('extraAlbum', '').split(',')
+      extraAlbum.forEach((item) => list.add(parseInt(item.trim(), 10)))
+
+      const excludeAlbum = config('excludeAlbum', '').split(',')
+      excludeAlbum.forEach((item) => list.delete(parseInt(item.trim(), 10)))
     }
-
-    const extraAlbum = config('extraAlbum', '').split(',')
-    extraAlbum.forEach((item) => list.add(parseInt(item.trim(), 10)))
-
-    const excludeAlbum = config('excludeAlbum', '').split(',')
-    excludeAlbum.forEach((item) => list.delete(parseInt(item.trim(), 10)))
 
     for (const albumId of list) {
       const albumInfo = await api.getAlbumInfo(albumId)
@@ -137,6 +137,47 @@ if (config('generatePlaylistFile', true)) {
         name: '[Album] ' + albumInfo.album.name,
         trackIds
       })
+    }
+
+    {
+      // Generate for artist top songs(歌手热门)
+      const list = new Set()
+      const nameMap = {}
+      if (config('downloadSubAlbum', false)) {
+        const artistList = await api.getUserArtist()
+        for (const artist of artistList) {
+          list.add(artist.id)
+          nameMap[artist.id] = artist.name
+        }
+
+        const extraArtist = config('extraArtist', '').split(',')
+        extraArtist.forEach((item) => list.add(parseInt(item.trim(), 10)))
+
+        const excludeArtist = config('excludeArtist', '').split(',')
+        excludeArtist.forEach((item) => list.delete(parseInt(item.trim(), 10)))
+      }
+
+      for (const artistId of list) {
+        const artistTop = await api.getArtistTop(artistId)
+        const trackIds = []
+
+        let publishTime = false
+
+        for (const track of artistTop.songs.splice(0, config('downloadSubArtistTopNum', 30))) {
+          if (publishTime === false) {
+            const trackInfo = await api.getTrackInfo(track.id)
+            publishTime = trackInfo.publishTime
+          }
+
+          trackList[track.id] = metadata.generateTrackMetadata(track, publishTime)
+          trackIds.push(parseInt(track.id, 10))
+        }
+
+        playlistList.push({
+          name: `[Artist Top ${config('downloadSubArtistTopNum', 30)}] ` + nameMap[artistId],
+          trackIds
+        })
+      }
     }
 
     for (let trackId in trackList) {

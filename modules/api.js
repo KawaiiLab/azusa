@@ -45,6 +45,17 @@ module.exports = {
     return result.data
   },
 
+  async getUserArtist () {
+    let result = await NeteaseCloudMusicApi.artist_sublist({
+      limit: 100,
+      cookie: this._cookie
+    })
+    result = result.body
+    logger.debug(result)
+
+    return result.data
+  },
+
   async getPlaylistInfo (playlistId) {
     let result = await NeteaseCloudMusicApi.playlist_detail({
       id: playlistId,
@@ -59,6 +70,17 @@ module.exports = {
   async getAlbumInfo (albumId) {
     let result = await NeteaseCloudMusicApi.album({
       id: albumId,
+      cookie: this._cookie
+    })
+    result = result.body
+    logger.debug(result)
+
+    return result
+  },
+
+  async getArtistTop (artistId) {
+    let result = await NeteaseCloudMusicApi.artist_top_song({
+      id: artistId,
       cookie: this._cookie
     })
     result = result.body

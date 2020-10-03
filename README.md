@@ -29,14 +29,13 @@
 - [x] 处理云端歌单变动
 - [x] 合并歌词原文与翻译
 - [x] 本地化 NeteaseCloudMusicApi
+- [x] 支持下载歌手热门歌曲
 - [ ] 处理播放器端列表变动
 - [ ] 指定为某几个歌单生成组合列表
 
 ## 依赖
 
 - Node.js 10+
-- ~~[Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)~~
-  - 感谢项目原作者支持 Node.js 调用
 
 ## 配置
 
@@ -64,17 +63,33 @@ cm_extraAlbum =
 # 排除的专辑 (用,分割)
 cm_excludeAlbum = 
 
+# 是否下载收藏的歌手热门歌曲
+cm_downloadSubArtist = false
+# 下载的歌曲数量 (前 N 首)
+cm_downloadSubArtistTopNum = 30
+# 附加的歌手 (用,分割)
+cm_extraArtist = 
+# 排除的歌手 (用,分割)
+cm_excludeArtist = 
+
 # 下载音质
 cm_bitRate = 999000
 
 # 是否将歌词与翻译合并为一行
 cm_mergeTranslation = false
-
-# 处理/下载歌曲的并发数
-cm_playlistConcurrency = 3
 ```
 
 ## 食用方法
+
+### 使用已构建好的版本
+
+1. 打开 [CloudMan/Releases](https://github.com/isXiaoLin/CloudMan/releases)
+2. 选择适合你操作系统的版本并下载 (`app-linux/macos/win.exe`)
+3. 在 WALKMAN 根目录创建名为 `CloudMan` 的文件夹并将程序复制进其中
+4. 复制[.env.example](https://github.com/isXiaoLin/CloudMan/blob/node/.env.example)的内容，按需修改后保存为 `.env`
+5. Windows 用户直接运行, macOS 或 linux 用户切换至响应目录后输入 `./app-macos/linux` 即可
+
+### 本地构建
 
 1.  在 WalkMan 根目录输入 `git clone https://github.com/isXiaoLin/CloudMan.git -b node`
 2.  进入 `CloudMan` 目录, 输入 `npm i`
@@ -91,7 +106,7 @@ cm_playlistConcurrency = 3
 
 这几天试用了一下 Sony 官方的 Music Center for PC, 发现其实还算好用，尤其是元数据补充得非常齐并且准确率也很高 (这也太高了吧 (碎碎念
 
-这个项目是用网易云得数据所以没法比得嘛 (自我安慰
+这个项目是用网易云的数据所以没法比得嘛 (自我安慰
 
 但是依然是可以进行 SensMe 分析的！只用打开 Music Center for PC，在`文件->导入文件夹`中选择 WALKMAN-SD 中的`MUSIC/CloudMan`文件夹，然后全选右键点击`获取未知元素`就可以啦！
 
