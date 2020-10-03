@@ -11,7 +11,7 @@
 
 ~~之前没用过 Python, 使用 Py 是为了使用 `mutagen` 库, 代码不精还请多多指教~~
 
-用熟悉的 Node 重构了一遍, 旧功能已基本实现, 因为熟悉所以后续可能会加更多新功能
+用熟悉的 Node.js 重构了一遍, 旧功能已基本实现, 因为熟悉所以后续可能会加更多新功能
 
 经测试现在的代码应该已经基本稳定了，如果还是有 BUG 或者有可以改进的地方欢迎提 IS 或 PR 嗷 (小声
 
@@ -28,14 +28,15 @@
 - [x] 下载错误自动重试
 - [x] 处理云端歌单变动
 - [x] 合并歌词原文与翻译
+- [x] 本地化 NeteaseCloudMusicApi
 - [ ] 处理播放器端列表变动
 - [ ] 指定为某几个歌单生成组合列表
 
 ## 依赖
 
 - Node.js 10+
-- [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
-  - 公共服务: `https://cm.api.xiaolin.in`
+- ~~[Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)~~
+  - 感谢项目原作者支持 Node.js 调用
 
 ## 配置
 
@@ -46,8 +47,6 @@ cm_logLevel = info
 # 是否为 /MUSIC 目录中的文件夹生成播放列表
 cm_generatePlaylistFile = true
 
-# NeteaseCloudMusicApi 服务地址
-cm_api = https://cm.api.xiaolin.in
 # 网易云手机账号
 cm_phone = 13912345678
 # 网易云密码

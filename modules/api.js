@@ -1,65 +1,90 @@
-const fetch = require('./fetch')
 const config = require('./config')
 const logger = require('./logger')
 
+const NeteaseCloudMusicApi = require('NeteaseCloudMusicApi')
+
 module.exports = {
   _uid: -1,
+  _cookie: '',
   async login (username, password) {
-    let login = await fetch(config('api') + `/login/cellphone?phone=${username}&password=${password}`)
-    login = await login.json()
-    logger.debug(login)
-    if (login.code === 200 && login.profile) {
+    let result = await NeteaseCloudMusicApi.login_cellphone({
+      phone: username,
+      password
+    })
+    result = result.body
+    logger.debug(result)
+    if (result.code === 200 && result.profile) {
       logger.info('Login success!')
-      this._uid = login.profile.userId
+      this._uid = result.profile.userId
+      this._cookie = result.cookie
     } else {
       logger.error('Login failed!')
-      throw new Error(login.msg)
+      throw new Error(result.msg)
     }
   },
 
   async getUserPlaylist () {
-    let result = await fetch(config('api') + '/user/playlist?uid=' + this._uid)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.user_playlist({
+      uid: this._uid,
+      cookie: this._cookie
+    })
+    result = result.body
     logger.debug(result)
 
     return result.playlist
   },
 
   async getUserAlbum () {
-    let result = await fetch(config('api') + '/album/sublist?limit=100')
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.album_sublist({
+      limit: 100,
+      cookie: this._cookie
+    })
+    result = result.body
     logger.debug(result)
 
     return result.data
   },
 
   async getPlaylistInfo (playlistId) {
-    let result = await fetch(config('api') + '/playlist/detail?id=' + playlistId)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.playlist_detail({
+      id: playlistId,
+      cookie: this._cookie
+    })
+    result = result.body
     logger.debug(result)
 
     return result.playlist
   },
 
   async getAlbumInfo (albumId) {
-    let result = await fetch(config('api') + '/album?id=' + albumId)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.album({
+      id: albumId,
+      cookie: this._cookie
+    })
+    result = result.body
     logger.debug(result)
 
     return result
   },
 
   async getTrackInfo (trackId) {
-    let result = await fetch(config('api') + '/song/detail?ids=' + trackId)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.song_detail({
+      ids: `${trackId}`,
+      cookie: this._cookie
+    })
+    result = result.body
     logger.debug(result)
 
     return result.songs[0]
   },
 
   async getTrackUrl (trackId) {
-    let result = await fetch(config('api') + `/song/url?id=${trackId}&br=${config('bitRate', 999000)}`)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.song_url({
+      id: trackId,
+      br: config('bitRate', 999000),
+      cookie: this._cookie
+    })
+    result = result.body
 
     const trackUrl = result.data[0]
     if (!trackUrl || !trackUrl.url) {
@@ -70,8 +95,11 @@ module.exports = {
   },
 
   async getLyric (trackId) {
-    let result = await fetch(config('api') + `/lyric?id=${trackId}`)
-    result = await result.json()
+    let result = await NeteaseCloudMusicApi.lyric({
+      id: trackId,
+      cookie: this._cookie
+    })
+    result = result.body
 
     return result
   }
