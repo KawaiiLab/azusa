@@ -70,8 +70,10 @@ module.exports = {
       flac.save()
     }
 
-    fs.unlink(coverPath, (error) => {
-      if (error) throw error
-    })
+    if (trackInfo.albumImg) {
+      fs.unlink(coverPath, (error) => {
+        if (error) throw error
+      })
+    }
   }
 }

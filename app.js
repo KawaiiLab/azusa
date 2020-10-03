@@ -45,7 +45,7 @@ if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
     for (const filename of filelist) {
       if (filename.startsWith('._')) continue
       const trackId = parseInt(filename.split('.')[0], 10)
-      if (filename.endsWith('.lrc')) that.downloaded.add(trackId)
+      if (filename.endsWith('.mp3') || filename.endsWith('.flac')) that.downloaded.add(trackId)
       if (filename.endsWith('.mp3')) that.downloadedFormat[trackId] = 'mp3'
       else if (filename.endsWith('.flac')) that.downloadedFormat[trackId] = 'flac'
     }
@@ -74,6 +74,7 @@ if (config('generatePlaylistFile', true)) {
   // Generate infomation for downloading
   const playlistList = []
   const trackList = {}
+  const unfoundTrackList = {}
   {
     // Generate for playlist(歌单)
     {
@@ -138,15 +139,25 @@ if (config('generatePlaylistFile', true)) {
       })
     }
 
+    for (let trackId in trackList) {
+      trackId = parseInt(trackId, 10)
+      if (that.downloaded.has(trackId)) {
+        trackList[trackId].done = true
+        trackList[trackId].format = that.downloadedFormat[trackId]
+      } else unfoundTrackList[trackId] = trackList[trackId]
+    }
+
     logger.info('Download list:')
     playlistList.forEach((item) => logger.info('  ' + item.name))
-    logger.initBar(Object.keys(trackList).length)
+    logger.initBar(Object.keys(unfoundTrackList).length)
   }
 
   // Track processing
-  const trackDownloadQueue = new PQueue({ concurrency: config('trackDownloadConcurrency', 3) })
+  const trackDownloadQueue = new PQueue({ concurrency: 3 })
+  const trackProcessQueue = new PQueue({ concurrency: 1 })
   const trackCopyQueue = new PQueue({ concurrency: 1 })
-  for (let trackId in trackList) {
+
+  for (let trackId in unfoundTrackList) {
     trackId = parseInt(trackId, 10)
     let trackInfo = trackList[trackId]
     trackDownloadQueue.add(async () => {
@@ -154,20 +165,12 @@ if (config('generatePlaylistFile', true)) {
       const realPath = path.resolve(__root, sha1(trackId).substr(0, 2))
       const savePath = tmpPath
 
-      if (that.downloaded.has(trackId)) {
-        logger.info(`Track ${trackId} existed!`)
-        trackList[trackId].done = true
-        trackList[trackId].format = that.downloadedFormat[trackId]
-        logger._bar.tick(1)
-        return
-      }
-
       logger.debug('Requesting details of track', trackId)
 
       if (!trackInfo.title) {
         trackInfo = metadata.generateTrackMetadata(await api.getTrackInfo(trackId))
       }
-      logger.info(`[Track: ${trackInfo.title}] ${colors.yellow('Start downloading...')}`)
+      logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.yellow('Downloading...')}`)
 
       // Download files
       let filetype = 'flac'
@@ -188,24 +191,27 @@ if (config('generatePlaylistFile', true)) {
         const trackUrl = await api.getTrackUrl(trackId)
 
         if (!trackUrl) {
-          logger.info(`[Track: ${trackInfo.title}] ${colors.red('Not available')} due to copyright issue!`)
+          logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.red('Not available due to copyright issue!')}`)
           logger._bar.tick(1)
           return
         }
         if (trackUrl.endsWith('mp3')) filetype = 'mp3'
 
-        logger.debug(`[Track: ${trackInfo.title}][Music file] Start downloading...`)
         await general.downloadFile(trackInfo, trackUrl, savePath)
 
         if (trackInfo.albumImg) {
-          logger.debug(`[Track: ${trackInfo.title}][Cover] Start downloading...`)
-          await general.downloadFile(trackInfo, trackInfo.albumImg + '?param=640y640', savePath)
+          try {
+            await general.downloadFile(trackInfo, trackInfo.albumImg + '?param=640y640', savePath)
+          } catch (error) {
+            logger.warn(error)
+            trackInfo.albumImg = ''
+          }
         }
       }
-      logger.info(`[Track: ${trackInfo.title}] ${colors.green('Downloaded!')}`)
+      logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.blue('Downloaded!')}`)
 
-      trackCopyQueue.add(async () => {
-        logger.info(`[Track: ${trackInfo.title}] ${colors.yellow('Start processing...')}`)
+      trackProcessQueue.add(async () => {
+        logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.yellow('Processing...')}`)
         // Metadata processing
         const trackPath = path.resolve(savePath, trackId + '.' + filetype)
         {
@@ -242,23 +248,30 @@ if (config('generatePlaylistFile', true)) {
             })
           }
         }
+        logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.blue('Processed!')}`)
 
-        logger.debug(`[Track: ${trackInfo.title}] Moving...`)
+        trackCopyQueue.add(async () => {
+          logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.yellow('Moving...')}`)
 
-        return new Promise((resolve) => {
-          fs.copyFile(trackPath, path.resolve(realPath, trackId + '.' + filetype), (error) => {
-            if (error) throw error
+          return new Promise((resolve) => {
+            const destPath = path.resolve(realPath, trackId + '.' + filetype)
+            fs.copyFile(trackPath, destPath + '.tmp', (error) => {
+              if (error) throw error
 
-            fs.unlink(trackPath, () => {
-              logger.debug(`[Track: ${trackInfo.title}] Moved!`)
+              fs.rename(destPath + '.tmp', destPath, (error) => {
+                if (error) throw error
+                fs.unlink(trackPath, () => {
+                  logger.debug(`[Track: ${colors.italic(trackInfo.title)}] Moved!`)
 
-              that.downloaded.add(trackId)
-              trackList[trackId].done = true
-              trackList[trackId].format = filetype
-              logger._bar.tick(1)
-              logger.info(`[Track: ${trackInfo.title}] ${colors.green('Success!')}`)
+                  that.downloaded.add(trackId)
+                  trackList[trackId].done = true
+                  trackList[trackId].format = filetype
+                  logger._bar.tick(1)
+                  logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.green('Success!')}`)
 
-              resolve()
+                  resolve()
+                })
+              })
             })
           })
         })
@@ -308,6 +321,6 @@ if (config('generatePlaylistFile', true)) {
 
   setTimeout(() => {
     intervalIds.forEach((id) => clearInterval(id))
-  }, 8000)
+  }, 7000)
   rimraf(tmpBasePath, () => {})
 })()
