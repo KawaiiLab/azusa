@@ -2,10 +2,19 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.7.0](https://github.com/isXiaoLin/CloudMan/compare/v0.6.3...v0.7.0)
+
+> 3 October 2020
+
+- fix: remove existed tracks from processing list [`167f984`](https://github.com/isXiaoLin/CloudMan/commit/167f984e620e02ddd9bf11cb154272eb07ca51f5)
+- fix: unresolved promise [`81073f6`](https://github.com/isXiaoLin/CloudMan/commit/81073f6dcb07e4a9d5664f76a47a20cec08137e5)
+- fix: rimraf callback function required [`fc4ce24`](https://github.com/isXiaoLin/CloudMan/commit/fc4ce24254a61c77b6aac1ab74a820ac24fa94e8)
+
 #### [v0.6.3](https://github.com/isXiaoLin/CloudMan/compare/v0.6.2...v0.6.3)
 
 > 29 August 2020
 
+- fix: moved file ( #5 ) [`1f8c1d8`](https://github.com/isXiaoLin/CloudMan/commit/1f8c1d87efcb3a994e20ea618ce7853255df22dc)
 - chore: update formats [`fbf72ae`](https://github.com/isXiaoLin/CloudMan/commit/fbf72ae7f6877df8ff661e597a89e8e2a014ef97)
 - chore(deps): bump lodash from 4.17.15 to 4.17.19 [`b13ed89`](https://github.com/isXiaoLin/CloudMan/commit/b13ed89ead06fbdeece621b116c492f183ee9721)
 - chore(deps): bump lodash from 4.17.15 to 4.17.19 [`a1abd00`](https://github.com/isXiaoLin/CloudMan/commit/a1abd00e861d8f4f4058b6848cb1604b714ddf3b)

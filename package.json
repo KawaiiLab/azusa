@@ -1,6 +1,6 @@
 {
   "name": "cloudman",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
