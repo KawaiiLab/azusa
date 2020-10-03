@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.8.0](https://github.com/isXiaoLin/CloudMan/compare/v0.7.0...v0.8.0)
+
+> 3 October 2020
+
+- feat: localize NeteaseCloudMusicApi [`c0fde4c`](https://github.com/isXiaoLin/CloudMan/commit/c0fde4c13953601ace7685c9a192958b1250473f)
+- feat: support downloading artists top songs [`2ffd7cc`](https://github.com/isXiaoLin/CloudMan/commit/2ffd7ccaefea68a578197a7bb62ac9c1feca86eb)
+- feat: auto remove unlisted tracks [`84682be`](https://github.com/isXiaoLin/CloudMan/commit/84682beaacfe1817b7278a51f16b8f471cd9e0e8)
+
 #### [v0.7.0](https://github.com/isXiaoLin/CloudMan/compare/v0.6.3...v0.7.0)
 
 > 3 October 2020
 
 - fix: remove existed tracks from processing list [`167f984`](https://github.com/isXiaoLin/CloudMan/commit/167f984e620e02ddd9bf11cb154272eb07ca51f5)
+- chore: bump to 0.7.0 [`28fdb5c`](https://github.com/isXiaoLin/CloudMan/commit/28fdb5c5c14a0e91db9bffb35bd79047b8c2e80b)
 - fix: unresolved promise [`81073f6`](https://github.com/isXiaoLin/CloudMan/commit/81073f6dcb07e4a9d5664f76a47a20cec08137e5)
 - fix: rimraf callback function required [`fc4ce24`](https://github.com/isXiaoLin/CloudMan/commit/fc4ce24254a61c77b6aac1ab74a820ac24fa94e8)
 
