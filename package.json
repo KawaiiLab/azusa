@@ -1,6 +1,6 @@
 {
   "name": "azusa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
@@ -36,6 +36,7 @@
     "path": "^0.12.7",
     "progress": "^2.0.3",
     "random-int": "^2.0.1",
+    "require-from-string": "^2.0.2",
     "rimraf": "^3.0.2",
     "sha1": "^1.1.1",
     "uuid": "^8.3.0"
