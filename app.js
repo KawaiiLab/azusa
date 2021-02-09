@@ -112,7 +112,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
             await Promise.all([...(new Set(idDiff.added))].map(id => {
               if (!trackIds.includes(id)) {
                 trackList[id] = {}
-                trackIds.push(parseInt(id, 10))
+                trackIds.unshift(parseInt(id, 10))
               }
               return api.editPlaylist('add', playlistId, id)
             }))
