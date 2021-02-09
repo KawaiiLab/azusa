@@ -1,21 +1,20 @@
-require('dotenv').config()
-
 const os = require('os')
 const fs = require('fs')
 const sha1 = require('sha1')
 const path = require('path')
 const colors = require('colors')
 const rimraf = require('rimraf')
+const fad = require('fast-array-diff')
 const randomInt = require('random-int')
 const hasher = require('node-object-hash')()
 const { default: PQueue } = require('p-queue')
 
-const api = require('./modules/api')
-const lyric = require('./modules/lyric')
-const config = require('./modules/config')
-const logger = require('./modules/logger')
-const general = require('./modules/general')
-const metadata = require('./modules/metadata')
+const api = require('./source/api')
+const lyric = require('./source/lyric')
+const config = require('./source/config')
+const logger = require('./source/logger')
+const general = require('./source/general')
+const metadata = require('./source/metadata')
 
 const that = {
   downloaded: new Set(),
@@ -23,17 +22,21 @@ const that = {
 }
 
 const uuid = require('uuid').v4
-const tmpBasePath = path.resolve(os.tmpdir(), 'CloudMan/')
+const tmpBasePath = path.resolve(os.tmpdir(), 'Azusa/')
 
 let __root = ''
 
 if (fs.existsSync(path.resolve('MUSIC'))) __root = path.resolve('MUSIC')
 else __root = path.resolve('../MUSIC')
 
-if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
+if (!fs.existsSync(__root = path.resolve(__root, 'Azusa/MUSIC'))) {
   fs.mkdirSync(__root, {
     recursive: true
   })
+}
+
+if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
+  fs.mkdirSync(path.resolve(__root, '.azusa/'))
 }
 
 // Get downloaded list
@@ -41,6 +44,7 @@ if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
   logger.info('Getting downloaded tracks...')
   const dirlist = fs.readdirSync(__root)
   for (const dirname of dirlist) {
+    if (dirname.startsWith('.')) continue
     const filelist = fs.readdirSync(path.resolve(__root, dirname))
     for (const filename of filelist) {
       if (filename.startsWith('._')) continue
@@ -50,11 +54,6 @@ if (!fs.existsSync(__root = path.resolve(__root, 'CloudMan/MUSIC/'))) {
       else if (filename.endsWith('.flac')) that.downloadedFormat[trackId] = 'flac'
     }
   }
-}
-
-// Process user dir
-if (config('generatePlaylistFile', true)) {
-  general.genUserPlaylistFile(__root)
 }
 
 (async () => {
@@ -83,10 +82,10 @@ if (config('generatePlaylistFile', true)) {
       const list = new Set()
       for (const plist of playlist) list.add(plist.id)
 
-      const extraPlaylist = config('extraPlaylist', '').split(',')
+      const extraPlaylist = config('extraPlaylist', [])
       extraPlaylist.forEach((item) => list.add(parseInt(item.trim(), 10)))
 
-      const excludePlaylist = config('excludePlaylist', '').split(',')
+      const excludePlaylist = config('excludePlaylist', [])
       excludePlaylist.forEach((item) => list.delete(parseInt(item.trim(), 10)))
 
       for (const playlistId of list) {
@@ -97,8 +96,36 @@ if (config('generatePlaylistFile', true)) {
           trackIds.push(parseInt(track.id, 10))
         }
 
+        const playlistName = config('prefix', []).playlist + playlistInfo.name
+        const needSync = (playlistInfo.creator.userId === api._uid) && config('syncPlaylist', []).includes(playlistId)
+
+        if (needSync) {
+          const filePath = path.resolve(__root, '.azusa/') + `/${playlistId}.json`
+          const playlistPath = path.resolve(__root, '../..', general.replaceChar(playlistName) + '  .m3u')
+          if (fs.existsSync(filePath) && fs.existsSync(playlistPath)) {
+            const oldTrackIds = JSON.parse(fs.readFileSync(filePath).toString())
+
+            const playlistData = fs.readFileSync(playlistPath).toString()
+            const modifiedTrackIds = playlistData.match(/\/(\d+)\./g).map(v => parseInt(v.replace('/', '').replace('.', ''), 10))
+
+            const idDiff = fad.diff(oldTrackIds, modifiedTrackIds)
+            await Promise.all([...(new Set(idDiff.added))].map(id => {
+              if (!trackIds.includes(id)) {
+                trackList[id] = {}
+                trackIds.push(parseInt(id, 10))
+              }
+              return api.editPlaylist('add', playlistId, id)
+            }))
+            await Promise.all([...(new Set(idDiff.removed))].map(id => {
+              general.removeValueFromArray(trackIds, id)
+              return api.editPlaylist('del', playlistId, id)
+            }))
+          }
+        }
+
         playlistList.push({
-          name: playlistInfo.name,
+          saveForChange: needSync ? playlistId : null,
+          name: playlistName,
           trackIds
         })
       }
@@ -110,10 +137,10 @@ if (config('generatePlaylistFile', true)) {
       const albumList = await api.getUserAlbum()
       for (const alist of albumList) list.add(alist.id)
 
-      const extraAlbum = config('extraAlbum', '').split(',')
+      const extraAlbum = config('extraAlbum', [])
       extraAlbum.forEach((item) => list.add(parseInt(item.trim(), 10)))
 
-      const excludeAlbum = config('excludeAlbum', '').split(',')
+      const excludeAlbum = config('excludeAlbum', [])
       excludeAlbum.forEach((item) => list.delete(parseInt(item.trim(), 10)))
     }
 
@@ -134,7 +161,7 @@ if (config('generatePlaylistFile', true)) {
       }
 
       playlistList.push({
-        name: '[Album] ' + albumInfo.album.name,
+        name: config('prefix', []).album + albumInfo.album.name,
         trackIds
       })
     }
@@ -150,10 +177,10 @@ if (config('generatePlaylistFile', true)) {
           nameMap[artist.id] = artist.name
         }
 
-        const extraArtist = config('extraArtist', '').split(',')
+        const extraArtist = config('extraArtist', [])
         extraArtist.forEach((item) => list.add(parseInt(item.trim(), 10)))
 
-        const excludeArtist = config('excludeArtist', '').split(',')
+        const excludeArtist = config('excludeArtist', [])
         excludeArtist.forEach((item) => list.delete(parseInt(item.trim(), 10)))
       }
 
@@ -174,7 +201,7 @@ if (config('generatePlaylistFile', true)) {
         }
 
         playlistList.push({
-          name: `[Artist Top ${config('downloadSubArtistTopNum', 30)}] ` + nameMap[artistId],
+          name: config('prefix', []).artistTopN.replace('$', config('downloadSubArtistTopNum', 30)) + nameMap[artistId],
           trackIds
         })
       }
@@ -334,47 +361,79 @@ if (config('generatePlaylistFile', true)) {
   }
 
   // Generate playlist file
-  const intervalIds = []
+  const playlistWriteList = []
   {
     const filelist = fs.readdirSync(path.resolve(__root, '../'))
     for (const name of filelist) {
       if (name !== 'MUSIC') fs.unlinkSync(path.resolve(__root, '../', name))
     }
   }
+  {
+    const filelist = fs.readdirSync(path.resolve(__root, '../../'))
+    for (const name of filelist) {
+      if (name.endsWith('  .m3u')) fs.unlinkSync(path.resolve(__root, '../../', name))
+    }
+  }
+  {
+    const filelist = fs.readdirSync(path.resolve(__root, '.azusa/'))
+    for (const name of filelist) {
+      fs.unlinkSync(path.resolve(__root, '.azusa/', name))
+    }
+  }
+
+  // Process user dir
+  if (config('generatePlaylistFile', true)) {
+    general.genUserPlaylistFile(__root)
+  }
+
   for (const playlistInfo of playlistList) {
     let objHash = null
-    intervalIds.push(setInterval(() => {
-      const playlistPath = path.resolve(__root, '..', general.replaceChar(playlistInfo.name) + '.m3u')
+    const needSave = playlistInfo.saveForChange
+    playlistWriteList.push(() => {
+      const playlistPath = path.resolve(__root, needSave ? '../..' : '..', general.replaceChar(playlistInfo.name) + (needSave ? '  .m3u' : '.m3u'))
 
       const trackPathList = []
+      const trackIdList = []
 
       for (const trackId of playlistInfo.trackIds) {
         if (trackList[trackId].done) {
           const trackFilename = trackId + '.' + trackList[trackId].format
-          const trackPath = path.join('MUSIC', sha1(trackId).substr(0, 2), trackFilename)
+          const trackPath = path.join(needSave ? 'Azusa/MUSIC' : 'MUSIC', sha1(trackId).substr(0, 2), trackFilename)
           trackPathList.push(trackPath)
+          trackIdList.push(trackId)
         }
       }
 
       if (trackPathList.length === 0) return
       if (objHash !== (objHash = hasher.hash(trackPathList))) {
         const filecontent = '#EXTM3U\n\n' + trackPathList.join('\n')
-        setTimeout(() => {
-          fs.writeFile(playlistPath, filecontent, (error) => {
-            if (error) throw error
-          })
-        }, randomInt(1, 1000))
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            fs.writeFile(playlistPath, filecontent, (error) => {
+              if (error) throw error
+
+              if (needSave) {
+                fs.writeFile(path.resolve(__root, '.azusa/') + `/${needSave}.json`, JSON.stringify(trackIdList), (error) => {
+                  if (error) throw error
+                  resolve()
+                })
+              }
+            })
+          }, randomInt(100, 1000))
+        })
       }
-    }, 5000))
+    })
   }
 
-  await trackDownloadQueue.onIdle()
-  await trackDownloadQueue.onEmpty()
-  await trackCopyQueue.onIdle()
-  await trackCopyQueue.onEmpty()
+  const intervalId = setInterval(() => {
+    Promise.all(playlistWriteList.map((fn) => fn ? fn() : Promise.resolve()))
+  }, 5000)
 
-  setTimeout(() => {
-    intervalIds.forEach((id) => clearInterval(id))
-  }, 7000)
+  await trackDownloadQueue.onIdle()
+  await trackCopyQueue.onIdle()
+
+  clearInterval(intervalId)
+  await Promise.all(playlistWriteList.map((fn) => fn ? fn() : Promise.resolve()))
+
   rimraf(tmpBasePath, () => {})
 })()

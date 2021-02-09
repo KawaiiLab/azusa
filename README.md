@@ -1,117 +1,144 @@
-<h1 align="center">CloudMan</h1>
-用来为 Sony WalkMan 播放器生成播放列表的小程序
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/20554060/107264211-aa90ba80-6a7d-11eb-8fef-6c3cf5b84bdf.png">
+</p>
 
-🎆for and by Music Lovers
+<p align="center">🎇 让可爱填满你的播放器(误</p>
 
-![Lisence](https://img.shields.io/badge/license-MIT-blue.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/bc1e4b82b99148aca374b22108847f47)](https://www.codacy.com/manual/isXiaoLin/CloudMan) [![CHANGELOG](https://img.shields.io/badge/%F0%9F%A4%96-release%20notes-00B2EE.svg)](https://github.com/isXiaoLin/CloudMan/blob/node/CHANGELOG.md)
+<p align="center">
+<a href="https://lyn.moe"><img alt="Author" src="https://img.shields.io/badge/Author-Lyn-blue.svg?style=for-the-badge"/></a>
+<a href="https://github.com/kawaiilab/azusa"><img alt="Version" src="https://img.shields.io/github/package-json/v/kawaiilab/azusa?style=for-the-badge"/></a>
+<img alt="License" src="https://img.shields.io/github/license/kawaiilab/azusa.svg?style=for-the-badge"/>
+</p>
 
-## 简介
+***
 
-本来是只想写一个下载网易云歌单并自动添加元数据 (曲名、专辑名、封面图等) 的小程序的, 歌词由某位 dalao 写的 `ZonyLrcToolsX` 来处理, 但是发现这个程序的逻辑有点小问题 (大概也不算小, 翻译基本上没对上过原文, 除了少数几首开头没有作词作曲信息的曲子), 导致翻译与原文对不上, 于是就顺带把歌词处理也给加上了
+### Introduction
 
-~~之前没用过 Python, 使用 Py 是为了使用 `mutagen` 库, 代码不精还请多多指教~~
+这个是用来帮助将你的网易云曲库搬到播放器的小程序，经过多次重构现已进入稳定状态，在 NW-ZX300 上亲测可正常使用
 
-用熟悉的 Node.js 重构了一遍, 旧功能已基本实现, 因为熟悉所以后续可能会加更多新功能
+### Feature
 
-经测试现在的代码应该已经基本稳定了，如果还是有 BUG 或者有可以改进的地方欢迎提 IS 或 PR 嗷 (小声
+- 同步收藏的歌单/歌手/专辑
+- 自动填充文件元数据
+- 生成歌词及翻译
+- 多线程下载
+- 为本地文件夹生成播放列表
+- 本地化 NeteaseCloudMusicApi / 无依赖
+- 可同步播放器端对歌单的修改
 
-## Features / TODOs
+### Usage
 
-- [x] 下载用户歌单
-- [x] 填充音乐元数据
-- [x] 下载并格式化歌词及翻译
-- [x] 允许排除 / 附加歌单
-- [x] 为本地文件夹生成列表
-- [x] 登陆后下载无损格式音乐
-- [x] 自定义下载质量 (默认最高[若未开通会员仅可下载少量无损歌曲])
-- [x] 多线程下载
-- [x] 下载错误自动重试
-- [x] 处理云端歌单变动
-- [x] 合并歌词原文与翻译
-- [x] 本地化 NeteaseCloudMusicApi
-- [x] 支持下载歌手热门歌曲
-- [ ] 处理播放器端列表变动
-- [ ] 指定为某几个歌单生成组合列表
+#### Pre-build version
 
-## 依赖
+1. 前往 [release](https://github.com/kawaiilab/azusa/releases) 下载对应操作系统架构的包
+2. 在播放器 `/MUSIC` 的同级目录创建文件夹 `Azusa` 或在 `/MUSIC` 目录同级目录克隆本项目
+3. 将 `config.example.js` 重命名为 `config.js` 并按照 [Configuration](#Configuration) 小节的指示修改并保存
+4. 打开命令行执行(Unix)或直接双击软件包运行程序
+5. Enjoy~
 
-- Node.js 10+
+#### Dev version
 
-## 配置
+1. 直接在播放器 `/MUSIC` 的同级目录克隆本项目，进入后输入 `npm install` 安装依赖
+2. 同上小节 `3.`
+3. 输入 `npm start` 运行程序
+4. Enjoy~
 
-```ini
-# 日志等级
-cm_logLevel = info
+### Configuration
 
-# 是否为 /MUSIC 目录中的文件夹生成播放列表
-cm_generatePlaylistFile = true
+```javascript
+module.exports = {
+  // 日志等级
+  logLevel: 'info',
 
-# 网易云手机账号
-cm_phone = 13912345678
-# 网易云密码
-cm_password = 123456
+  // 是否为 /MUSIC 目录中的文件夹生成播放列表
+  generatePlaylistFile: false,
 
-# 附加的歌单 (用,分割)
-cm_extraPlaylist = 
-# 排除的歌单 (用,分割)
-cm_excludePlaylist = 
+  // 网易云手机账号
+  phone: 13912345678,
+  // 网易云密码
+  password: '1234567',
 
-# 是否下载收藏的专辑
-cm_downloadSubAlbum = false
-# 附加的专辑 (用,分割)
-cm_extraAlbum = 
-# 排除的专辑 (用,分割)
-cm_excludeAlbum = 
+  // 附加的歌单
+  extraPlaylist: [
+    12345,
+    23345
+  ],
+  // 排除的歌单
+  excludePlaylist: [],
+  // 需要同步的歌单
+  syncPlaylist: [
+    233333
+  ],
 
-# 是否下载收藏的歌手热门歌曲
-cm_downloadSubArtist = false
-# 下载的歌曲数量 (前 N 首)
-cm_downloadSubArtistTopNum = 30
-# 附加的歌手 (用,分割)
-cm_extraArtist = 
-# 排除的歌手 (用,分割)
-cm_excludeArtist = 
+  // 是否下载收藏的专辑
+  downloadSubAlbum: false,
+  // 附加的专辑
+  extraAlbum: [],
+  // 排除的专辑
+  excludeAlbum: [],
 
-# 下载音质
-cm_bitRate = 999000
+  // 是否下载收藏的歌手热门歌曲
+  downloadSubArtist: false,
+  // 下载的歌曲数量 (前 N 首)
+  downloadSubArtistTopNum: 30,
+  // 附加的歌手
+  extraArtist: [
+    456788
+  ],
+  // 排除的歌手
+  excludeArtist: [],
 
-# 是否将歌词与翻译合并为一行
-cm_mergeTranslation = false
+  // 下载音质
+  bitRate: 999000,
+
+  // 是否将歌词与翻译合并为一行
+  mergeTranslation: false,
+
+  // 播放列表前缀
+  prefix: {
+    album: '[Album] ',
+    artistTopN: '[Artist Top $] ',
+    playlist: '[Playlist] ',
+    userDir: '[Dir] '
+  }
+}
 ```
 
-## 食用方法
+### Function Description
 
-### 使用已构建好的版本
+#### Flow
 
-1. 打开 [CloudMan/Releases](https://github.com/isXiaoLin/CloudMan/releases)
-2. 选择适合你操作系统的版本并下载 (`app-linux/macos/win.exe`)
-3. 在 WALKMAN 根目录创建名为 `CloudMan` 的文件夹并将程序复制进其中
-4. 复制[.env.example](https://github.com/isXiaoLin/CloudMan/blob/node/.env.example)的内容，按需修改后保存为 `.env`
-5. Windows 用户直接运行, macOS 或 linux 用户切换至响应目录后输入 `./app-macos/linux` 即可
+为本地目录创建播放列表文件 -> 登录&获取歌单列表&处理播放器端播放列表变动 -> 下载音乐及歌词至播放器&异步写入播放列表文件
 
-### 本地构建
+#### Generate Playlist File
 
-1.  在 WalkMan 根目录输入 `git clone https://github.com/isXiaoLin/CloudMan.git -b node`
-2.  进入 `CloudMan` 目录, 输入 `npm i`
-3.  将 `.env.example` 重命名为 `.env` 并按需修改
-4.  输入 `npm start` 即可
+为本地 `/MUSIC` 目录下已有的目录中的文件生成播放列表文件，与文件夹同名
 
-## 运行方式
+#### Sync Playlist
 
-程序运行时自动在根目录的 `/MUSIC` 中生成 `CloudMan` 文件夹, 该文件夹中 `MUSIC` 文件夹用于存放歌曲文件及歌词文件, 父目录用于存放播放列表文件
+添加在这个列表中的播放列表会被程序监测并处理变动，用户必须有该播放列表的修改权限
 
-所有歌曲文件均以歌曲 ID 命名并统一存放至 `MUSIC` 文件夹中, 以便于不同播放列表引用同一文件
+逻辑: 生成播放列表时保存两份(一份 m3u 一份 JSON)，当播放器端进行更改(增加或删除曲目)时会对 m3u 文件进行修改，程序通过比对得到需要更改的项目
 
-## SensMe 及 Music Center for PC
+#### Merge Translation
 
-这几天试用了一下 Sony 官方的 Music Center for PC, 发现其实还算好用，尤其是元数据补充得非常齐并且准确率也很高 (这也太高了吧 (碎碎念
+据反馈([#1](https://github.com/kawaiilab/azusa/issues/1))某些机器不支持多行同时间歌词，开启次开关后程序会将原文及翻译整合为一行
 
-这个项目是用网易云的数据所以没法比得嘛 (自我安慰
+### SensMe & Music Center for PC Support
 
-但是依然是可以进行 SensMe 分析的！只用打开 Music Center for PC，在`文件->导入文件夹`中选择 WALKMAN-SD 中的`MUSIC/CloudMan`文件夹，然后全选右键点击`获取未知元素`就可以啦！
+本项目可和 Sony 官方的 Music Center for PC 配合使用，后者可为播放器中的音乐补全风格等元信息并可将歌曲加入 Sony 播放器中的 SensMe 频道
 
-## Author
+打开 Music Center for PC，在 `文件 -> 导入文件夹` 中选择播放器的 `MUSIC/Azusa` 文件夹，全选右键点击 `获取未知元素` 即可开始填充进程
 
-**CloudMan** © [XiaoLin](https://github.com/isXiaoLin), Released under the [MIT](./LICENSE) License.<br>
+### Credit
 
-> Blog [@xiaolin](https://www.xiaolin.in) · GitHub [@isXiaoLin](https://github.com/isXiaoLin) · Twitter [@isXiaoLin](https://twitter.com/isXiaoLin)
+[Illustration: あずにゃん](https://www.pixiv.net/artworks/80257983)
+
+### Name
+
+[Azusa Nakano](https://myanimelist.net/character/21173/Azusa_Nakano) from [K-On!](https://myanimelist.net/anime/5680/K-On)
+
+### LICENSE
+
+MIT
+

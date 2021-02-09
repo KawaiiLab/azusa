@@ -1,0 +1,83 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号'
+        required: true
+
+jobs:
+  build:
+    name: Publish relesae
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+    
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          registry-url: https://registry.npmjs.org/
+        
+      - name: Build
+        run: |
+          npm install
+          npm run build
+          
+      - name: Create release info
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: v${{ github.event.inputs.version }}
+          draft: true
+          prerelease: false
+          
+      - name: Upload win-x64
+        id: upload-win-x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/azusa-win-x64.exe
+          asset_name: azusa-v${{ github.event.inputs.version }}-win-x64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload win-x86
+        id: upload-win-x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/azusa-win-x86.exe
+          asset_name: azusa-v${{ github.event.inputs.version }}-win-x86.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload macos-x64
+        id: upload-macos-x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/azusa-macos-x64
+          asset_name: azusa-v${{ github.event.inputs.version }}-macos-x64
+          asset_content_type: application/octet-stream
+
+      - name: Upload linux-x64
+        id: upload-linux-x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/azusa-linux-x64
+          asset_name: azusa-v${{ github.event.inputs.version }}-linux-x64
+          asset_content_type: application/octet-stream

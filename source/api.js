@@ -14,11 +14,11 @@ module.exports = {
     result = result.body
     logger.debug(result)
     if (result.code === 200 && result.profile) {
-      logger.info('Login success!')
+      logger.info('Login success')
       this._uid = result.profile.userId
       this._cookie = result.cookie
     } else {
-      logger.error('Login failed!')
+      logger.error('Login failed')
       throw new Error(result.msg)
     }
   },
@@ -120,6 +120,18 @@ module.exports = {
     let result = await NeteaseCloudMusicApi.lyric({
       id: trackId,
       cookie: this._cookie
+    })
+    result = result.body
+
+    return result
+  },
+
+  async editPlaylist (op, playlistId, trackId) {
+    let result = await NeteaseCloudMusicApi.playlist_tracks({
+      cookie: this._cookie,
+      op: op === 'add' ? 'add' : 'del',
+      pid: playlistId,
+      tracks: `${trackId}`
     })
     result = result.body
 
