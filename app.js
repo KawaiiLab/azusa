@@ -106,7 +106,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
             const oldTrackIds = JSON.parse(fs.readFileSync(filePath).toString())
 
             const playlistData = fs.readFileSync(playlistPath).toString()
-            const modifiedTrackIds = playlistData.match(/\/(\d+)\./g).map(v => parseInt(v.replace('/', '').replace('.', ''), 10))
+            const modifiedTrackIds = playlistData.match(/[\/\\](\d+)\./g).map(v => parseInt(v.match(/(\d+)/)[0], 10))
 
             const idDiff = fad.diff(oldTrackIds, modifiedTrackIds)
             await Promise.all([...(new Set(idDiff.added))].map(id => {
