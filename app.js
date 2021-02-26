@@ -68,7 +68,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
 
   // Login to Cloudmusic
   logger.info('Logging in to Cloudmusic')
-  await api.login(config('phone'), config('password'))
+  await api.login(config('phone'), config('password'), config('saveCookie', true) ? path.resolve(__dirname, 'account.json') : '')
 
   // Generate infomation for downloading
   const playlistList = []
@@ -106,7 +106,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
             const oldTrackIds = JSON.parse(fs.readFileSync(filePath).toString())
 
             const playlistData = fs.readFileSync(playlistPath).toString()
-            const modifiedTrackIds = playlistData.match(/[\/\\](\d+)\./g).map(v => parseInt(v.match(/(\d+)/)[0], 10))
+            const modifiedTrackIds = playlistData.match(/[/\\](\d+)\./g).map(v => parseInt(v.match(/(\d+)/)[0], 10))
 
             const idDiff = fad.diff(oldTrackIds, modifiedTrackIds)
             await Promise.all([...(new Set(idDiff.added))].map(id => {

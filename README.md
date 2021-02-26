@@ -57,6 +57,8 @@ module.exports = {
   phone: 13912345678,
   // 网易云密码
   password: '1234567',
+  // 是否保存 Cookie
+  saveCookie: true,
 
   // 附加的歌单
   extraPlaylist: [
@@ -109,6 +111,10 @@ module.exports = {
 #### Flow
 
 为本地目录创建播放列表文件 -> 登录&获取歌单列表&处理播放器端播放列表变动 -> 下载音乐及歌词至播放器&异步写入播放列表文件
+
+#### Save Cookie
+
+开启后运行时会在根目录下生成 `account.json` 用于存放账号 Cookie
 
 #### Generate Playlist File
 

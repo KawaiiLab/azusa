@@ -1,6 +1,6 @@
 {
   "name": "azusa",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
