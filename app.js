@@ -68,7 +68,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
 
   // Login to Cloudmusic
   logger.info('Logging in to Cloudmusic')
-  await api.login(config('phone'), config('password'), config('saveCookie', true) ? path.resolve(__dirname, 'account.json') : '')
+  await api.login(config('phone'), config('password'), config('saveCookie', true) ? path.resolve('account.json') : '')
 
   // Generate infomation for downloading
   const playlistList = []
