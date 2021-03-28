@@ -1,6 +1,6 @@
 {
-  "name": "azusa",
-  "version": "1.1.0",
+  "name": "@kawaiilab/azusa",
+  "version": "1.1.1",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
