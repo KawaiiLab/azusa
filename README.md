@@ -25,6 +25,7 @@
 - 为本地文件夹生成播放列表
 - 本地化 NeteaseCloudMusicApi / 无依赖
 - 可同步播放器端对歌单的修改
+- 支持日推 / 历史日推下载
 
 ### Usage
 
@@ -84,11 +85,14 @@ module.exports = {
   // 下载的歌曲数量 (前 N 首)
   downloadSubArtistTopNum: 30,
   // 附加的歌手
-  extraArtist: [
-    456788
-  ],
+  extraArtist: [],
   // 排除的歌手
   excludeArtist: [],
+
+  // 下载当日日推
+  downloadRecommendation: false,
+  // 下载历史日推 (仅限黑胶 VIP )
+  downloadHistoryRecommendation: false,
 
   // 下载音质
   bitRate: 999000,
@@ -101,7 +105,8 @@ module.exports = {
     album: '[Album] ',
     artistTopN: '[Artist Top $] ',
     playlist: '[Playlist] ',
-    userDir: '[Dir] '
+    userDir: '[Dir] ',
+    recommendation: '[Recommendation] '
   }
 }
 ```

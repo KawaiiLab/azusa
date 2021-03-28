@@ -78,6 +78,59 @@ module.exports = {
     return result.data
   },
 
+  async getUserRecommendation () {
+    let detail = await NeteaseCloudMusicApi.recommend_songs({
+      cookie: this._cookie
+    })
+
+    detail = detail.body.data
+    logger.debug(detail)
+
+    const trackList = []
+    const content = Array.from(detail.dailySongs)
+    content.forEach(v => trackList.push(v))
+
+    return trackList
+  },
+
+  async getUserHistoryRecommendation () {
+    let result = await NeteaseCloudMusicApi.history_recommend_songs({
+      cookie: this._cookie
+    })
+    result = result.body.data
+    logger.debug(result)
+
+    if (result.dates) {
+      const trackList = {}
+      const dates = Array.from(result.dates)
+
+      while (dates.length) {
+        const date = dates.pop()
+        let detail = await NeteaseCloudMusicApi.history_recommend_songs_detail({
+          date: date,
+          cookie: this._cookie
+        })
+
+        detail = detail.body.data
+        logger.debug(detail)
+
+        const content = Array.from(detail.songs)
+        trackList[date] = []
+        content.forEach(v => trackList[date].push(v))
+      }
+
+      return {
+        dates: Array.from(result.dates),
+        tracks: trackList
+      }
+    } else {
+      return {
+        dates: [],
+        tracks: {}
+      }
+    }
+  },
+
   async getPlaylistInfo (playlistId) {
     let result = await NeteaseCloudMusicApi.playlist_detail({
       id: playlistId,
@@ -128,7 +181,7 @@ module.exports = {
       br: config('bitRate', 999000),
       cookie: this._cookie
     })
-    result = result.body
+    result = JSON.parse(result.body.toString())
 
     const trackUrl = result.data[0]
     if (!trackUrl || !trackUrl.url) {

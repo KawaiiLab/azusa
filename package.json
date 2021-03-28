@@ -1,6 +1,6 @@
 {
   "name": "azusa",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "For and by music lover",
   "main": "app.js",
   "scripts": {
@@ -21,15 +21,15 @@
   },
   "homepage": "https://github.com/kawaiilab/azusa#readme",
   "dependencies": {
-    "NeteaseCloudMusicApi": "^4.0.3",
+    "NeteaseCloudMusicApi": "^4.0.9",
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "fast-array-diff": "^1.0.0",
     "fs": "0.0.1-security",
     "metaflac-js2": "^1.0.7",
-    "node-id3": "^0.1.17",
+    "node-id3": "^0.2.2",
     "node-object-hash": "^2.0.0",
-    "nodejs-file-downloader": "^4.1.1",
+    "nodejs-file-downloader": "^4.4.0",
     "os": "^0.1.1",
     "p-queue": "^6.4.0",
     "p-retry": "^4.2.0",

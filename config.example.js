@@ -33,6 +33,11 @@ module.exports = {
   // 排除的歌手
   excludeArtist: [],
 
+  // 下载当日日推
+  downloadRecommendation: false,
+  // 下载历史日推 (仅限黑胶 VIP )
+  downloadHistoryRecommendation: false,
+
   // 下载音质
   bitRate: 999000,
 
@@ -44,6 +49,7 @@ module.exports = {
     album: '[Album] ',
     artistTopN: '[Artist Top $] ',
     playlist: '[Playlist] ',
-    userDir: '[Dir] '
+    userDir: '[Dir] ',
+    recommendation: '[Recommendation] '
   }
 }

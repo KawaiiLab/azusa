@@ -96,6 +96,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
           trackIds.push(parseInt(track.id, 10))
         }
 
+        // 处理播放器歌单变动
         const playlistName = config('prefix', []).playlist + playlistInfo.name
         const needSync = (playlistInfo.creator.userId === api._uid) && config('syncPlaylist', []).includes(playlistId)
 
@@ -207,6 +208,51 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
       }
     }
 
+    // Generate for history recommendation
+    if (config('downloadRecommendation', false)) {
+      const data = await api.getUserRecommendation()
+
+      const trackIds = []
+
+      for (const track of data) {
+        trackList[track.id] = metadata.generateTrackMetadata(track)
+        trackIds.push(parseInt(track.id, 10))
+      }
+
+      let month = (new Date()).getMonth() + 1
+      month = (month < 10) ? `0${month}` : `${month}`
+
+      let day = (new Date()).getDate()
+      day = (day < 10) ? `0${day}` : `${day}`
+
+      const date = `${(new Date()).getFullYear()}-${month}-${day}`
+
+      playlistList.push({
+        name: config('prefix', []).recommendation + date,
+        trackIds
+      })
+    }
+
+    // Generate for history recommendation
+    if (config('downloadHistoryRecommendation', false)) {
+      const historyData = await api.getUserHistoryRecommendation()
+
+      for (const date of historyData.dates) {
+        const trackIds = []
+
+        for (const track of historyData.tracks[date]) {
+          trackList[track.id] = metadata.generateTrackMetadata(track)
+          trackIds.push(parseInt(track.id, 10))
+        }
+
+        playlistList.push({
+          name: config('prefix', []).recommendation + date,
+          trackIds
+        })
+      }
+    }
+
+    // Remove downloaded tracks
     for (let trackId in trackList) {
       trackId = parseInt(trackId, 10)
       if (that.downloaded.has(trackId)) {
@@ -229,7 +275,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
     }
 
     logger.info('Download list:')
-    playlistList.forEach((item) => logger.info('  ' + item.name))
+    playlistList.forEach((item) => logger.info('  ' + item.name + ` (${item.trackIds.length})`))
     logger.initBar(Object.keys(unfoundTrackList).length)
   }
 
