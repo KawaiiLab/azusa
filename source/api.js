@@ -181,6 +181,7 @@ module.exports = {
       br: config('bitRate', 999000),
       cookie: this._cookie
     })
+    logger.debug(result)
     result = JSON.parse(result.body.toString())
 
     const trackUrl = result.data[0]
@@ -196,6 +197,7 @@ module.exports = {
       id: trackId,
       cookie: this._cookie
     })
+    logger.debug(result)
     result = result.body
 
     return result
@@ -208,7 +210,7 @@ module.exports = {
       pid: playlistId,
       tracks: `${trackId}`
     })
-    result = result.body
+    logger.debug(result)
 
     return result
   }

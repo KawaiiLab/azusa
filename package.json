@@ -1,8 +1,11 @@
 {
   "name": "@kawaiilab/azusa",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "For and by music lover",
   "main": "app.js",
+  "bin": {
+    "azusa": "./app.js"
+  },
   "scripts": {
     "start": "node app.js",
     "build": "rm -fr ./dist && ./node_modules/.bin/pkg -t node14-macos-x64 app.js -o ./dist/azusa-macos-x64 --no-bytecode --public --public-packages '*' && ./node_modules/.bin/pkg -t node14-win-x64 app.js -o ./dist/azusa-win-x64 --no-bytecode --public --public-packages '*' && ./node_modules/.bin/pkg -t node14-win-x86 app.js -o ./dist/azusa-win-x86 --no-bytecode --public --public-packages '*' && ./node_modules/.bin/pkg -t node14-linux-x64 app.js -o ./dist/azusa-linux-x64 --no-bytecode --public --public-packages '*'"

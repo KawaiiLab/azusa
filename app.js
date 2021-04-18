@@ -98,7 +98,8 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
 
         // 处理播放器歌单变动
         const playlistName = config('prefix', []).playlist + playlistInfo.name
-        const needSync = (playlistInfo.creator.userId === api._uid) && config('syncPlaylist', []).includes(playlistId)
+        const syncConfig = config('syncPlaylist', [])
+        const needSync = (playlistInfo.creator.userId === api._uid) && (syncConfig.includes(playlistId) || syncConfig.includes('all'))
 
         if (needSync) {
           const filePath = path.resolve(__root, '.azusa/') + `/${playlistId}.json`

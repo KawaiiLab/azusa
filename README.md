@@ -70,7 +70,8 @@ module.exports = {
   excludePlaylist: [],
   // 需要同步的歌单
   syncPlaylist: [
-    233333
+    233333,
+    'all' // 当数组中存在字符串 all 时，程序会将所有可编辑的歌单添加到监控列表中
   ],
 
   // 是否下载收藏的专辑

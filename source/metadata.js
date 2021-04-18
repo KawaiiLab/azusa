@@ -50,7 +50,7 @@ module.exports = {
       logger.debug('MP3 meatadata', tags)
       const result = nodeID3.write(tags, trackPath)
       if (result) {
-        logger.debug('Metadata writed.')
+        logger.debug('Metadata written.')
       } else {
         logger.warn('Write metadata failed.')
       }
