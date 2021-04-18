@@ -457,8 +457,8 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
                 resolve()
               }
             })
-          }, randomInt(100, 1000)).catch(console.trace)
-        })
+          }, randomInt(100, 1000))
+        }).catch(console.trace)
       }
     })
   }
