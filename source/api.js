@@ -50,8 +50,8 @@ module.exports = {
       uid: this._uid,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result.playlist
   },
@@ -61,8 +61,8 @@ module.exports = {
       limit: 100,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result.data
   },
@@ -72,8 +72,8 @@ module.exports = {
       limit: 100,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result.data
   },
@@ -83,8 +83,8 @@ module.exports = {
       cookie: this._cookie
     })
 
-    detail = detail.body.data
     logger.debug(detail)
+    detail = detail.body.data
 
     const trackList = []
     const content = Array.from(detail.dailySongs)
@@ -97,8 +97,8 @@ module.exports = {
     let result = await NeteaseCloudMusicApi.history_recommend_songs({
       cookie: this._cookie
     })
-    result = result.body.data
     logger.debug(result)
+    result = result.body.data
 
     if (result.dates) {
       const trackList = {}
@@ -136,8 +136,8 @@ module.exports = {
       id: playlistId,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result.playlist
   },
@@ -147,8 +147,8 @@ module.exports = {
       id: albumId,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result
   },
@@ -158,8 +158,8 @@ module.exports = {
       id: artistId,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result
   },
@@ -169,8 +169,8 @@ module.exports = {
       ids: `${trackId}`,
       cookie: this._cookie
     })
-    result = result.body
     logger.debug(result)
+    result = result.body
 
     return result.songs[0]
   },
@@ -204,7 +204,7 @@ module.exports = {
   },
 
   async editPlaylist (op, playlistId, trackId) {
-    let result = await NeteaseCloudMusicApi.playlist_tracks({
+    const result = await NeteaseCloudMusicApi.playlist_tracks({
       cookie: this._cookie,
       op: op === 'add' ? 'add' : 'del',
       pid: playlistId,

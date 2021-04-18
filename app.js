@@ -117,11 +117,11 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
                 trackIds.unshift(parseInt(id, 10))
               }
               return api.editPlaylist('add', playlistId, id)
-            }))
+            })).catch(console.trace)
             await Promise.all([...(new Set(idDiff.removed))].map(id => {
               general.removeValueFromArray(trackIds, id)
               return api.editPlaylist('del', playlistId, id)
-            }))
+            })).catch(console.trace)
           }
         }
 
@@ -134,6 +134,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
     }
 
     // Generate for album(专辑)
+    logger.info('Requesting user\'s albums')
     const list = new Set()
     if (config('downloadSubAlbum', false)) {
       const albumList = await api.getUserAlbum()
@@ -150,15 +151,8 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
       const albumInfo = await api.getAlbumInfo(albumId)
       const trackIds = []
 
-      let publishTime = false
-
       for (const track of albumInfo.songs) {
-        if (publishTime === false) {
-          const trackInfo = await api.getTrackInfo(track.id)
-          publishTime = trackInfo.publishTime
-        }
-
-        trackList[track.id] = metadata.generateTrackMetadata(track, publishTime)
+        trackList[track.id] = {}
         trackIds.push(parseInt(track.id, 10))
       }
 
@@ -170,6 +164,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
 
     {
       // Generate for artist top songs(歌手热门)
+      logger.info('Requesting user\'s atrists\' songs')
       const list = new Set()
       const nameMap = {}
       if (config('downloadSubAlbum', false)) {
@@ -190,15 +185,8 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
         const artistTop = await api.getArtistTop(artistId)
         const trackIds = []
 
-        let publishTime = false
-
         for (const track of artistTop.songs.splice(0, config('downloadSubArtistTopNum', 30))) {
-          if (publishTime === false) {
-            const trackInfo = await api.getTrackInfo(track.id)
-            publishTime = trackInfo.publishTime
-          }
-
-          trackList[track.id] = metadata.generateTrackMetadata(track, publishTime)
+          trackList[track.id] = {}
           trackIds.push(parseInt(track.id, 10))
         }
 
@@ -210,6 +198,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
     }
 
     // Generate for history recommendation
+    logger.info('Requesting user\'s daily recommendation')
     if (config('downloadRecommendation', false)) {
       const data = await api.getUserRecommendation()
 
@@ -312,10 +301,10 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
             })
           } else resolve()
         })
-      })
+      }).catch(console.trace)
 
       {
-        logger.debug('Requesting URL of track', trackInfo.title)
+        logger.debug('Requesting URL of track', trackInfo.title, trackId)
         const trackUrl = await api.getTrackUrl(trackId)
 
         if (!trackUrl) {
@@ -359,9 +348,9 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
               })
             } else resolve()
           })
-        })
+        }).catch(console.trace)
         {
-          logger.debug('Requesting lyric of track', trackInfo.name)
+          logger.debug('Requesting lyric of track', trackInfo.name, trackId)
           const lyricData = await api.getLyric(trackId)
 
           if (!lyricData.lrc || !lyricData.lrc.lyric) {
@@ -373,7 +362,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
                 if (error) throw error
                 resolve()
               })
-            })
+            }).catch(console.trace)
           }
         }
         logger.info(`[Track: ${colors.italic(trackInfo.title)}] ${colors.blue('Processed!')}`)
@@ -401,7 +390,7 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
                 })
               })
             })
-          })
+          }).catch(console.trace)
         })
       })
     })
@@ -464,9 +453,11 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
                   if (error) throw error
                   resolve()
                 })
+              } else {
+                resolve()
               }
             })
-          }, randomInt(100, 1000))
+          }, randomInt(100, 1000)).catch(console.trace)
         })
       }
     })
@@ -480,7 +471,9 @@ if (!fs.existsSync(path.resolve(__root, '.azusa/'))) {
   await trackCopyQueue.onIdle()
 
   clearInterval(intervalId)
-  await Promise.all(playlistWriteList.map((fn) => fn ? fn() : Promise.resolve()))
-
-  rimraf(tmpBasePath, () => {})
-})()
+  await Promise.all(playlistWriteList.map((fn) => fn ? fn() : Promise.resolve())).then(() => {
+    setTimeout(() => {
+      rimraf(tmpBasePath, () => {})
+    }, 1200)
+  })
+})().catch(console.trace)
